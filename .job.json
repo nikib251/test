@@ -3,7 +3,7 @@
   "userId": 156471140,
   "projectName": "testdurak",
   "task": "создай новую задачу, уровня sub, нужна механика ежедневного бонуса",
-  "status": "executing",
+  "status": "done",
   "phase": "plan",
   "pendingQuestions": [],
   "answeredQuestions": {},
@@ -18,8 +18,8 @@
     "batch": 0
   },
   "createdAt": "2026-04-01T10:50:03.861Z",
-  "updatedAt": "2026-04-01T10:50:03.861Z",
+  "updatedAt": "2026-04-01T10:58:04.082Z",
   "startedAt": "2026-04-01T10:50:03.861Z",
-  "completedAt": null,
+  "completedAt": "2026-04-01T10:58:04.082Z",
   "errorLog": []
 }
