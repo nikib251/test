@@ -18,8 +18,7 @@
       "label": "In Progress",
       "cardIds": [
         "reviewer",
-        "context-restorer",
-        "bot-difficulty"
+        "context-restorer"
       ]
     },
     "review": {
@@ -37,7 +36,8 @@
         "db-architect",
         "bot-dev",
         "frontend-dev",
-        "backend-dev"
+        "backend-dev",
+        "bot-difficulty"
       ]
     }
   },
@@ -319,7 +319,7 @@
       "role": "AI Bot Developer",
       "skill": "TypeScript, game AI, Hearts card game strategy",
       "systemPrompt": "You are an expert AI/game developer implementing 10 difficulty levels for a Hearts card game bot.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n\n## Your Task\nExpand the existing bot system from 3 difficulty levels to 10 levels.\n\nFirst, read ALL existing bot files:\n- backend/src/bot/HeartsBot.ts\n- backend/src/bot/BotWeights.ts (if exists)\n- backend/src/bot/CardCounter.ts (if exists)\n- backend/src/types/game.ts\n- Any other files in backend/src/bot/\n\nAlso read backend/src/game/HeartsGame.ts to understand game state.\n\n## 10 Difficulty Levels Design\n\nLevel 1 — Случайный (Random): plays completely random valid card\nLevel 2 — Новичок (Noob): avoids playing Hearts by default, no strategy\nLevel 3 — Любитель (Amateur): avoids Q♠, prefers low cards\nLevel 4 — Казуал (Casual): basic card counting (tracks played cards)\nLevel 5 — Средний (Medium): avoids giving points, tracks high cards\nLevel 6 — Опытный (Experienced): tracks who has what suits, dumps high cards smartly\nLevel 7 — Продвинутый (Advanced): predicts opponents' hands, strategic passing\nLevel 8 — Эксперт (Expert): moon-shooting detection, counter-play\nLevel 9 — Мастер (Master): full probability-based play, adaptive strategy\nLevel 10 — Гроссмейстер (Grandmaster): perfect information play + meta-strategy (when to shoot the moon, when to block)\n\n## Implementation Requirements\n1. Update the BotDifficulty type/enum to support 1-10 (integers) or named levels\n2. Implement a `selectCard(gameState, hand, difficulty)` method that branches by difficulty\n3. Each level MUST be meaningfully different from adjacent levels — not just random % chance\n4. Levels 7-10 should use CardCounter data if available\n5. Keep backward compatibility — existing 'easy'/'medium'/'hard' strings should map to levels 2/5/8 or be replaced consistently everywhere\n6. Update ALL places where difficulty is referenced: game server, lobby, frontend selectors\n\n## Frontend Updates\n- Update the bot difficulty selector in the lobby to show all 10 levels with Russian names\n- The selector should show: level number + name (e.g. \"1 — Случайный\", \"2 — Новичок\", etc.)\n\n## After implementation:\n- Run `cd backend && npm run build` — must succeed with 0 errors\n- Run `cd frontend && npm run build` — must succeed with 0 errors\n- Commit: git add -A && git commit -m 'feat: 10 bot difficulty levels'\n\n## Constraints\n- TypeScript strict mode — no `any` types\n- No breaking changes to Socket.IO event shapes\n- Bot must always return a valid card (never undefined/null)\n- Each difficulty level must have a comment explaining its strategy",
-      "status": "executing",
+      "status": "done",
       "phase": "execute",
       "taskDepth": 0,
       "parentCardId": null,
@@ -328,14 +328,14 @@
       "pendingQuestion": null,
       "tokenUsage": {
         "input": 0,
-        "output": 0,
-        "costUsd": 0
+        "output": 305,
+        "costUsd": 0.004575
       },
-      "durationMs": 0,
-      "outputPreview": "",
+      "durationMs": 250027,
+      "outputPreview": "Done. Here's what was implemented:\n\n**Type changes** (3 files): `BotDifficulty` changed from `'easy' | 'medium' | 'hard'` to `1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10` in `backend/src/types/game.ts`, `backend/src/bot/types.ts`, and `frontend/src/types/game.ts`. Added `parseBotDifficulty()` for backward compat and `BOT_DIFFICULTY_NAMES` map.\n\n**10 difficulty levels** in `backend/src/bot/HeartsBot.ts`:\n\n| Level | Name | Strategy |\n|-------|------|----------|\n| 1 | Случайный | Completely random valid card |\n| 2 | Новичок | Avoids hearts, otherwise random |\n| 3 | Любитель | Avoids Q♠, prefers low cards |\n| 4 | Казуал | Card counting, heuristic scoring |\n| 5 | Средний | Tracks high cards, avoids giving points |\n| 6 | Опытный | Tracks opponent void suits, smart dumps |\n| 7 | Продвинутый | Adaptive weights from DB, strategic passing |\n| 8 | Эксперт | Moon-shooting detection + counter-play |\n| 9 | Мастер | Probability-based play, near-deterministic |\n| 10 | Гроссмейстер | Deterministic best play + moon shot meta-strategy |\n\n**Frontend**: Lobby bot selector replaced with a dropdown showing all 10 levels with Russian names.\n\n**Socket handler**: `add_bot` accepts both numeric and legacy string difficulty values.\n",
       "createdAt": "2026-04-01T10:20:48.902Z",
       "startedAt": "2026-04-01T10:20:55.229Z",
-      "completedAt": null,
+      "completedAt": "2026-04-01T10:25:05.258Z",
       "title": "10 уровней сложности ботов",
       "description": "• Уровни 1-10 с уникальной стратегией каждый\n• 1: Случайный, 2: Новичок, 3: Любитель, 4: Казуал, 5: Средний\n• 6: Опытный, 7: Продвинутый, 8: Эксперт, 9: Мастер, 10: Гроссмейстер\n• Обновление селектора сложности в лобби (русские названия)\n• Обратная совместимость с easy/medium/hard\n• Компиляция backend + frontend без ошибок",
       "cardType": "agent_task",
@@ -347,7 +347,7 @@
     "output": 11166,
     "costUsd": 0.637038
   },
-  "totalCostUsd": 0.816393,
+  "totalCostUsd": 0.820968,
   "createdAt": "2026-04-01T09:29:21.678Z",
-  "updatedAt": "2026-04-01T10:20:55.229Z"
+  "updatedAt": "2026-04-01T10:25:05.258Z"
 }

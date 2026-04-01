@@ -3,7 +3,7 @@
   "userId": 156471140,
   "projectName": "testdurak",
   "task": "[USER_NOTES] While you were working on the previous task, the user sent these messages:\n1. проверь потом kanban доску, в in progress висят задачи, которые вроде как должны быть выполнены\nно они не выполнены после перезапуска\n\n[PENDING BACKLOG WISHES]\n- [wish-1775035874864-xxrd] Уровни сложности: Хочется чтобы были уровни сложности(штук 10, от простейшег до самого сложного)\n- [wish-1775036323892-u2wn] Адаптивная верстка: верстка под компьютер с адаптивным разрешением, а так же под ios, android с браузера\n\nAddress them: answer questions, plan new features, or take any needed action.",
-  "status": "executing",
+  "status": "done",
   "phase": "plan",
   "pendingQuestions": [],
   "answeredQuestions": {},
@@ -18,8 +18,8 @@
     "batch": 0
   },
   "createdAt": "2026-04-01T10:17:55.114Z",
-  "updatedAt": "2026-04-01T10:17:55.115Z",
+  "updatedAt": "2026-04-01T10:25:11.935Z",
   "startedAt": "2026-04-01T10:17:55.115Z",
-  "completedAt": null,
+  "completedAt": "2026-04-01T10:25:11.935Z",
   "errorLog": []
 }

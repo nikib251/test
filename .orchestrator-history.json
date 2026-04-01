@@ -238,5 +238,25 @@
         }
       }
     ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_01EnAXXyJqLVyFyfbvFkJVEw",
+        "content": "[Agent: bot-difficulty] [Phase: execute] [Success: true]\n\nDone. Here's what was implemented:\n\n**Type changes** (3 files): `BotDifficulty` changed from `'easy' | 'medium' | 'hard'` to `1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10` in `backend/src/types/game.ts`, `backend/src/bot/types.ts`, and `frontend/src/types/game.ts`. Added `parseBotDifficulty()` for backward compat and `BOT_DIFFICULTY_NAMES` map.\n\n**10 difficulty levels** in `backend/src/bot/HeartsBot.ts`:\n\n| Level | Name | Strategy |\n|-------|------|----------|\n| 1 | Случайный | Completely random valid card |\n| 2 | Новичок | Avoids hearts, otherwise random |\n| 3 | Любитель | Avoids Q♠, prefers low cards |\n| 4 | Казуал | Card counting, heuristic scoring |\n| 5 | Средний | Tracks high cards, avoids giving points |\n| 6 | Опытный | Tracks opponent void suits, smart dumps |\n| 7 | Продвинутый | Adaptive weights from DB, strategic passing |\n| 8 | Эксперт | Moon-shooting detection + counter-play |\n| 9 | Мастер | Probability-based play, near-deterministic |\n| 10 | Гроссмейстер | Deterministic best play + moon shot meta-strategy |\n\n**Frontend**: Lobby bot selector replaced with a dropdown showing all 10 levels with Russian names.\n\n**Socket handler**: `add_bot` accepts both numeric and legacy string difficulty values.\n",
+        "is_error": false
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "text",
+        "text": "Готово! Реализованы **10 уровней сложности ботов**:\n\n| # | Название | Стратегия |\n|---|----------|-----------|\n| 1 | Случайный | Случайная допустимая карта |\n| 2 | Новичок | Избегает червей |\n| 3 | Любитель | Избегает Q♠, предпочитает маленькие |\n| 4 | Казуал | Счёт сыгранных карт |\n| 5 | Средний | Отслеживает старшие карты |\n| 6 | Опытный | Видит пустые масти соперников |\n| 7 | Продвинутый | Адаптивные веса, стратегический обмен |\n| 8 | Эксперт | Детектирует попытку Луны, контригра |\n| 9 | Мастер | Вероятностная игра |\n| 10 | Гроссмейстер | Детерминированная лучшая игра + мета-стратегия |\n\nТеперь берёмся за **адаптивную вёрстку** (desktop + iOS/Android)?"
+      }
+    ]
   }
 ]
