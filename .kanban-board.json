@@ -10,7 +10,8 @@
       "label": "Backlog / Questions",
       "cardIds": [
         "wish-1775035874864-xxrd",
-        "wish-1775036323892-u2wn"
+        "wish-1775036323892-u2wn",
+        "wish-1775040006518-tbe7"
       ]
     },
     "in_progress": {
@@ -37,7 +38,8 @@
         "bot-dev",
         "frontend-dev",
         "backend-dev",
-        "bot-difficulty"
+        "bot-difficulty",
+        "responsive-dev"
       ]
     }
   },
@@ -340,14 +342,69 @@
       "description": "• Уровни 1-10 с уникальной стратегией каждый\n• 1: Случайный, 2: Новичок, 3: Любитель, 4: Казуал, 5: Средний\n• 6: Опытный, 7: Продвинутый, 8: Эксперт, 9: Мастер, 10: Гроссмейстер\n• Обновление селектора сложности в лобби (русские названия)\n• Обратная совместимость с easy/medium/hard\n• Компиляция backend + frontend без ошибок",
       "cardType": "agent_task",
       "createdBy": "orchestrator"
+    },
+    "responsive-dev": {
+      "id": "responsive-dev",
+      "role": "Frontend Developer",
+      "skill": "React, TypeScript, CSS, responsive design, mobile-first, iOS/Android browser",
+      "systemPrompt": "You are an expert frontend developer specializing in responsive design for React + TypeScript + Vite projects.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id(\"react\") → pick best match → query-docs(\"/facebook/react\", \"hooks\")\n\n## Your Task\nMake the Hearts card game fully responsive for:\n1. **Desktop** (1920px, 1440px, 1280px, 1024px)\n2. **Tablet** (768px–1023px) — iPad, Android tablets\n3. **Mobile** (320px–767px) — iPhone SE to iPhone 15 Pro Max, Android phones\n\n## Step 1: Audit\nFirst, read ALL frontend files:\n- frontend/src/screens/*.tsx\n- frontend/src/components/*.tsx\n- frontend/src/styles/*.css (or any .css/.scss files)\n- frontend/index.html\n- frontend/src/App.tsx\n\nIdentify: fixed pixel widths/heights, non-responsive font sizes, absolute positioning issues, elements that overflow on mobile.\n\n## Step 2: Global CSS Foundation\nIn the main CSS file (or create frontend/src/styles/responsive.css and import it):\n- Add CSS custom properties for spacing/sizing at each breakpoint\n- Set `box-sizing: border-box` globally\n- Add `viewport` meta tag check in index.html: `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">`\n- Prevent iOS safari overscroll/bounce: `html, body { overflow: hidden; position: fixed; width: 100%; height: 100%; }`\n- Prevent text size adjust on iOS: `-webkit-text-size-adjust: 100%;`\n\n## Step 3: Game Screen (MOST IMPORTANT)\nThe game table with cards must work on all screen sizes:\n- Cards must scale proportionally (use `vmin` or `clamp()` for card sizes)\n- Player areas (top/bottom/left/right) must reposition on small screens\n- On mobile (portrait): stack opponents vertically, show fewer cards if needed\n- The playing area (center table) must be visible without scrolling\n- Card hand at the bottom must be scrollable horizontally if too many cards\n- Touch events must work: tap to select card, tap again to play (no hover dependency)\n- Score display must be compact on mobile\n\n## Step 4: Lobby Screen\n- Form inputs must be full-width on mobile\n- Buttons must be large enough for touch (min 44px height)\n- Bot difficulty selector must be touch-friendly\n- Room list must scroll properly\n\n## Step 5: Other Screens\n- HomeScreen: centered, large touch targets\n- ResultsScreen: scrollable scores table on mobile\n- LeaderboardScreen: responsive table or card-based layout on mobile\n\n## Breakpoints to use:\n```css\n/* Mobile first approach */\n/* base styles = mobile (320px+) */\n@media (min-width: 480px) { /* large mobile */ }\n@media (min-width: 768px) { /* tablet */ }\n@media (min-width: 1024px) { /* desktop */ }\n@media (min-width: 1440px) { /* large desktop */ }\n```\n\n## iOS/Android Specific Fixes:\n- Safe area insets: `padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)`\n- Touch callout disable: `-webkit-touch-callout: none`\n- Tap highlight: `-webkit-tap-highlight-color: transparent`\n- iOS input zoom fix: font-size >= 16px on all inputs\n- Android Chrome bottom bar: use `100dvh` with fallback to `100vh`\n\n## Card Sizing Formula:\n```css\n.card {\n  width: clamp(40px, 8vmin, 80px);\n  height: clamp(60px, 12vmin, 120px);\n  font-size: clamp(10px, 2vmin, 18px);\n}\n```\n\n## After implementation:\n- Run `cd frontend && npm run build` — must succeed with 0 errors/warnings about CSS\n- Commit: git add -A && git commit -m 'feat: responsive layout for desktop, tablet, mobile'\n\n## Constraints:\n- NO external CSS frameworks (no Bootstrap, no Tailwind) — pure CSS\n- Preserve all existing visual design, colors, animations\n- Don't break desktop layout\n- Use CSS custom properties (variables) for maintainability\n- All interactive elements must have min touch target size of 44x44px on mobile",
+      "status": "done",
+      "phase": "execute",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 305,
+        "costUsd": 0.004575
+      },
+      "durationMs": 389486,
+      "outputPreview": "Done. Here's what was implemented:\n\n**New file: `frontend/src/styles/responsive.css`** — comprehensive mobile-first CSS with:\n- CSS custom properties for card sizes, fonts, spacing that scale with viewport\n- Card sizing via `clamp(40px, 8vmin, 70px)` / `clamp(60px, 12vmin, 100px)`\n- Game table height: `clamp(200px, 45vmin, 400px)`\n- 4 breakpoints: base (320px+), 768px (tablet), 1024px (desktop), 1440px (large desktop)\n\n**iOS/Android fixes:**\n- `viewport-fit=cover` + safe-area inset padding\n- `-webkit-touch-callout: none`, `-webkit-tap-highlight-color: transparent`\n- `100dvh` with `100vh` fallback everywhere\n- `html, body { overflow: hidden; position: fixed }` on mobile (unlocked on desktop)\n- Input font-size forced to 16px to prevent iOS zoom\n- All interactive elements min 44px touch targets\n\n**Game screen:**\n- Score panel hidden on mobile, accessible via \"Score\" toggle button (fixed top-right)\n- Score panel slides in as overlay on mobile, inline 260px sidebar on desktop\n- Player hand scrolls horizontally on mobile, wraps on desktop\n- Pass bar and top bar compact on mobile\n\n**All screens updated** from inline-only styles to CSS classes while preserving the visual design. Build passes with 0 errors.\n",
+      "createdAt": "2026-04-01T10:32:12.027Z",
+      "startedAt": "2026-04-01T10:32:18.688Z",
+      "completedAt": "2026-04-01T10:42:54.221Z",
+      "title": "Адаптивная вёрстка",
+      "description": "• Полный responsive для 320px–1920px\n• Мобильный (iOS/Android): карты масштабируются через clamp()/vmin\n• Планшет (768px+): переходный layout\n• Десктоп (1024px+): оригинальный дизайн\n• iOS фиксы: safe-area, tap-highlight, input zoom, overscroll\n• Игровой стол: карты без скролла, тач-события\n• Лобби: full-width inputs, кнопки 44px+\n• Таблицы результатов: скролл на мобиле\n• Компиляция без ошибок",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "wish-1775040006518-tbe7": {
+      "id": "wish-1775040006518-tbe7",
+      "role": "",
+      "skill": "",
+      "systemPrompt": "",
+      "status": "ready",
+      "phase": "",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 0,
+        "costUsd": 0
+      },
+      "durationMs": 0,
+      "outputPreview": "",
+      "createdAt": "2026-04-01T10:40:06.518Z",
+      "startedAt": null,
+      "completedAt": null,
+      "title": "анимации движения карт",
+      "description": "когда ходишь картой - пусть используется анимация, в которой карта как бы вращается вокруг своей оси(длится должна 1-2 секунды)",
+      "cardType": "user_wish",
+      "wishCategory": "feature",
+      "createdBy": "156471140"
     }
   },
   "orchestratorCost": {
-    "input": 156516,
-    "output": 11166,
-    "costUsd": 0.637038
+    "input": 193680,
+    "output": 13345,
+    "costUsd": 0.781215
   },
-  "totalCostUsd": 0.820968,
+  "totalCostUsd": 0.96972,
   "createdAt": "2026-04-01T09:29:21.678Z",
-  "updatedAt": "2026-04-01T10:25:05.258Z"
+  "updatedAt": "2026-04-01T10:42:54.221Z"
 }
