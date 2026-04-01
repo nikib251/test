@@ -47,33 +47,32 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={panelStyle}>
+    <div className="lobby-container">
+      <div className="lobby-panel">
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontSize: 22, color: '#ffd600' }}>Game Lobby</h2>
-          <button onClick={onLeave} style={linkBtn}>Leave</button>
+        <div className="lobby-header">
+          <h2>Game Lobby</h2>
+          <button onClick={onLeave} className="lobby-leave-btn">Leave</button>
         </div>
 
         {/* Lobby Code */}
-        <div style={codeBoxStyle}>
+        <div className="lobby-code-box">
           <span style={{ fontSize: 12, color: '#aaa' }}>Lobby Code:</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 20, fontWeight: 'bold', letterSpacing: 2, color: '#ffd600' }}>
+            <span className="lobby-code-value">
               {lobby.gameId}
             </span>
-            <button onClick={copyCode} style={smallBtn}>Copy</button>
+            <button onClick={copyCode} className="lobby-small-btn">Copy</button>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
-          {/* Left: Players + Chat */}
-          <div style={{ flex: 1, minWidth: 250 }}>
-            {/* Players */}
-            <h3 style={sectionTitle}>Players ({lobby.players.length}/4)</h3>
+        <div className="lobby-content">
+          {/* Players + Chat */}
+          <div className="lobby-players-section">
+            <h3 className="lobby-section-title">Players ({lobby.players.length}/4)</h3>
             <div style={{ marginBottom: 12 }}>
               {lobby.players.map((p) => (
-                <div key={p.id} style={playerRowStyle}>
+                <div key={p.id} className="lobby-player-row">
                   <div>
                     <span style={{ fontWeight: 'bold' }}>{p.nickname}</span>
                     {p.role === 'bot' && p.difficulty != null && (
@@ -86,7 +85,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     )}
                   </div>
                   {isHost && p.role === 'bot' && (
-                    <button onClick={() => onRemoveBot(p.id)} style={removeBtn}>
+                    <button onClick={() => onRemoveBot(p.id)} className="lobby-remove-btn">
                       Remove
                     </button>
                   )}
@@ -95,7 +94,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
               {/* Empty slots */}
               {Array.from({ length: 4 - lobby.players.length }).map((_, i) => (
-                <div key={`empty-${i}`} style={{ ...playerRowStyle, color: '#555' }}>
+                <div key={`empty-${i}`} className="lobby-player-row" style={{ color: '#555' }}>
                   Empty slot
                 </div>
               ))}
@@ -103,12 +102,22 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
             {/* Add Bot */}
             {isHost && lobby.players.length < 4 && (
-              <div style={{ display: 'flex', gap: 6, marginBottom: 16, alignItems: 'center' }}>
+              <div className="lobby-add-bot">
                 <span style={{ fontSize: 13, color: '#aaa' }}>Add Bot:</span>
                 <select
                   value={selectedDifficulty}
                   onChange={(e) => setSelectedDifficulty(Number(e.target.value) as BotDifficulty)}
-                  style={selectStyle}
+                  style={{
+                    padding: '6px 8px',
+                    background: '#0f3460',
+                    color: '#eee',
+                    border: '1px solid #88c0d0',
+                    borderRadius: 4,
+                    fontSize: 16,
+                    cursor: 'pointer',
+                    outline: 'none',
+                    minHeight: 44,
+                  }}
                 >
                   {([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as BotDifficulty[]).map((d) => (
                     <option key={d} value={d}>
@@ -116,15 +125,24 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                     </option>
                   ))}
                 </select>
-                <button onClick={() => onAddBot(selectedDifficulty)} style={botBtn}>
+                <button onClick={() => onAddBot(selectedDifficulty)} style={{
+                  padding: '6px 12px',
+                  background: '#1a3a5c',
+                  color: '#88c0d0',
+                  border: '1px solid #88c0d0',
+                  borderRadius: 4,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  minHeight: 44,
+                }}>
                   Add
                 </button>
               </div>
             )}
 
             {/* Chat */}
-            <h3 style={sectionTitle}>Chat</h3>
-            <div style={chatBoxStyle}>
+            <h3 className="lobby-section-title">Chat</h3>
+            <div className="lobby-chat-box scroll-y">
               {chatMessages.map((msg, i) => (
                 <div key={i} style={{ marginBottom: 4 }}>
                   <span style={{ fontWeight: 'bold', color: msg.playerId === 'system' ? '#ffd600' : '#88c0d0', fontSize: 12 }}>
@@ -135,20 +153,19 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
               ))}
               <div ref={chatEndRef} />
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div className="lobby-chat-input-row">
               <input
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
                 placeholder="Type a message..."
-                style={chatInputStyle}
               />
-              <button onClick={handleSendChat} style={smallBtn}>Send</button>
+              <button onClick={handleSendChat} className="lobby-small-btn">Send</button>
             </div>
           </div>
 
-          {/* Right: Rules */}
-          <div style={{ flex: 1, minWidth: 250 }}>
+          {/* Rules */}
+          <div className="lobby-rules-section">
             <RulesConfig rules={lobby.rules} onChange={onUpdateRules} disabled={!isHost} />
           </div>
         </div>
@@ -158,8 +175,8 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
           <button
             onClick={onStartGame}
             disabled={lobby.players.length < 4}
+            className="lobby-start-btn"
             style={{
-              ...startBtnStyle,
               opacity: lobby.players.length < 4 ? 0.5 : 1,
               cursor: lobby.players.length < 4 ? 'not-allowed' : 'pointer',
             }}
@@ -172,133 +189,6 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
       </div>
     </div>
   );
-};
-
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'center',
-  padding: 20,
-  minHeight: '100vh',
-};
-
-const panelStyle: React.CSSProperties = {
-  background: '#16213e',
-  borderRadius: 16,
-  padding: 30,
-  width: '100%',
-  maxWidth: 800,
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-};
-
-const codeBoxStyle: React.CSSProperties = {
-  background: '#0f3460',
-  borderRadius: 8,
-  padding: '10px 16px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-};
-
-const sectionTitle: React.CSSProperties = {
-  fontSize: 14,
-  color: '#aaa',
-  marginBottom: 8,
-  textTransform: 'uppercase',
-  letterSpacing: 1,
-};
-
-const playerRowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '8px 12px',
-  background: '#0f3460',
-  borderRadius: 6,
-  marginBottom: 4,
-  fontSize: 14,
-};
-
-const chatBoxStyle: React.CSSProperties = {
-  height: 150,
-  overflowY: 'auto',
-  background: '#0f3460',
-  borderRadius: 6,
-  padding: 8,
-  marginBottom: 6,
-};
-
-const chatInputStyle: React.CSSProperties = {
-  flex: 1,
-  padding: '6px 10px',
-  background: '#0f3460',
-  border: '1px solid #333',
-  borderRadius: 4,
-  color: '#eee',
-  fontSize: 13,
-  outline: 'none',
-};
-
-const smallBtn: React.CSSProperties = {
-  padding: '6px 12px',
-  background: '#2a5298',
-  color: '#eee',
-  border: 'none',
-  borderRadius: 4,
-  fontSize: 12,
-  cursor: 'pointer',
-};
-
-const selectStyle: React.CSSProperties = {
-  padding: '4px 8px',
-  background: '#0f3460',
-  color: '#eee',
-  border: '1px solid #88c0d0',
-  borderRadius: 4,
-  fontSize: 12,
-  cursor: 'pointer',
-  outline: 'none',
-};
-
-const botBtn: React.CSSProperties = {
-  padding: '4px 10px',
-  background: '#1a3a5c',
-  color: '#88c0d0',
-  border: '1px solid #88c0d0',
-  borderRadius: 4,
-  fontSize: 12,
-  cursor: 'pointer',
-};
-
-const removeBtn: React.CSSProperties = {
-  padding: '2px 8px',
-  background: 'transparent',
-  color: '#e53e3e',
-  border: '1px solid #e53e3e',
-  borderRadius: 4,
-  fontSize: 11,
-  cursor: 'pointer',
-};
-
-const linkBtn: React.CSSProperties = {
-  background: 'transparent',
-  color: '#888',
-  border: 'none',
-  fontSize: 13,
-  cursor: 'pointer',
-  textDecoration: 'underline',
-};
-
-const startBtnStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '14px 20px',
-  background: '#43a047',
-  color: '#fff',
-  border: 'none',
-  borderRadius: 8,
-  fontSize: 18,
-  fontWeight: 'bold',
-  marginTop: 20,
-  cursor: 'pointer',
 };
 
 export default LobbyScreen;

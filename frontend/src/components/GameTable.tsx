@@ -31,20 +31,6 @@ function getPlayerPositions(players: PlayerState[], myPlayerId: string): PlayerP
   }));
 }
 
-const POSITION_STYLES: Record<string, React.CSSProperties> = {
-  bottom: { bottom: 10, left: '50%', transform: 'translateX(-50%)' },
-  top: { top: 10, left: '50%', transform: 'translateX(-50%)' },
-  left: { left: 10, top: '50%', transform: 'translateY(-50%)' },
-  right: { right: 10, top: '50%', transform: 'translateY(-50%)' },
-};
-
-const TRICK_CARD_STYLES: Record<string, React.CSSProperties> = {
-  bottom: { bottom: '35%', left: '50%', transform: 'translateX(-50%)' },
-  top: { top: '35%', left: '50%', transform: 'translateX(-50%)' },
-  left: { left: '35%', top: '50%', transform: 'translateY(-50%)' },
-  right: { right: '35%', top: '50%', transform: 'translateY(-50%)' },
-};
-
 const GameTable: React.FC<GameTableProps> = ({
   players,
   currentPlayerId,
@@ -60,31 +46,9 @@ const GameTable: React.FC<GameTableProps> = ({
   }
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: 400,
-        background: 'radial-gradient(ellipse at center, #0a7e2a, #076324, #054d1b)',
-        borderRadius: 20,
-        border: '6px solid #3e2723',
-        boxShadow: 'inset 0 0 50px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.5)',
-        overflow: 'hidden',
-      }}
-    >
+    <div className="game-table">
       {heartsBroken && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 12,
-            fontSize: 12,
-            color: '#ff6b6b',
-            background: 'rgba(0,0,0,0.4)',
-            padding: '2px 8px',
-            borderRadius: 4,
-          }}
-        >
+        <div className="hearts-broken">
           {'\u2665'} Hearts Broken
         </div>
       )}
@@ -96,64 +60,40 @@ const GameTable: React.FC<GameTableProps> = ({
         return (
           <React.Fragment key={player.id}>
             {/* Player info */}
-            <div
-              style={{
-                position: 'absolute',
-                ...POSITION_STYLES[position],
-                textAlign: 'center',
-                zIndex: 2,
-              }}
-            >
+            <div className={`table-player-info pos-${position}`}>
               <div
+                className="table-player-badge"
                 style={{
                   background: isCurrentTurn ? 'rgba(255,214,0,0.3)' : 'rgba(0,0,0,0.5)',
                   border: isCurrentTurn ? '2px solid #ffd600' : '2px solid transparent',
-                  borderRadius: 8,
-                  padding: '6px 12px',
-                  minWidth: 100,
-                  transition: 'all 0.3s ease',
                 }}
               >
-                <div style={{ fontSize: 14, fontWeight: 'bold', color: '#fff' }}>
+                <div className="player-name">
                   {player.nickname}
                   {player.role === 'bot' && (
-                    <span style={{ fontSize: 10, color: '#aaa', marginLeft: 4 }}>
+                    <span style={{ fontSize: '0.7em', color: '#aaa', marginLeft: 4 }}>
                       ({player.difficulty})
                     </span>
                   )}
                 </div>
-                <div style={{ fontSize: 12, color: '#ccc' }}>
+                <div className="player-stats">
                   Score: {player.score} | Cards: {player.handCount}
                 </div>
                 {!player.isConnected && (
-                  <div style={{ fontSize: 10, color: '#ff6b6b' }}>Disconnected</div>
+                  <div style={{ fontSize: '0.7em', color: '#ff6b6b' }}>Disconnected</div>
                 )}
               </div>
             </div>
 
             {/* Trick card played by this player */}
             {trickCard && (
-              <div
-                style={{
-                  position: 'absolute',
-                  ...TRICK_CARD_STYLES[position],
-                  zIndex: 3,
-                  animation: 'fadeSlideIn 0.3s ease-out',
-                }}
-              >
+              <div className={`table-trick-card pos-${position}`}>
                 <Card card={trickCard.card} small />
               </div>
             )}
           </React.Fragment>
         );
       })}
-
-      <style>{`
-        @keyframes fadeSlideIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 };

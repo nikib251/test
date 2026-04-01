@@ -32,6 +32,7 @@ const GameScreen: React.FC<GameScreenProps> = ({
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [showRoundModal, setShowRoundModal] = useState(false);
   const [showTrickWinner, setShowTrickWinner] = useState<string | null>(null);
+  const [showScorePanel, setShowScorePanel] = useState(false);
 
   const myPlayer = gameState.players.find((p) => p.id === myPlayerId);
   const isMyTurn = gameState.currentPlayerId === myPlayerId;
@@ -98,27 +99,35 @@ const GameScreen: React.FC<GameScreenProps> = ({
     : `Pass 3 cards ${gameState.passDirection}`;
 
   return (
-    <div style={containerStyle}>
+    <div className="game-container">
       {/* Top bar */}
-      <div style={topBarStyle}>
-        <div style={{ fontSize: 13, color: '#aaa' }}>
+      <div className="game-top-bar">
+        <div style={{ color: '#aaa' }}>
           Round {gameState.round} &middot; Trick {gameState.trickNumber}/13
         </div>
         {moonShotWarning && (
-          <div style={moonWarningStyle}>
+          <div className="game-moon-warning">
             {'\u26A0'} Moon Shot Alert!
           </div>
         )}
-        <div style={{ fontSize: 13, color: '#aaa' }}>
+        <div>
           {isMyTurn && isPlaying && (
-            <span style={{ color: '#ffd600', fontWeight: 'bold' }}>Your turn!</span>
+            <span className="turn-indicator">Your turn!</span>
           )}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 16, flex: 1, overflow: 'hidden' }}>
-        {/* Game table */}
-        <div style={{ flex: 1 }}>
+      {/* Score toggle - mobile only */}
+      <button
+        className="game-score-toggle"
+        onClick={() => setShowScorePanel(!showScorePanel)}
+      >
+        Score
+      </button>
+
+      <div className="game-main">
+        {/* Game table + hand */}
+        <div className="game-table-wrapper">
           <GameTable
             players={gameState.players}
             currentPlayerId={gameState.currentPlayerId}
@@ -129,18 +138,16 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
           {/* Passing phase UI */}
           {isPassing && gameState.passDirection !== 'none' && (
-            <div style={passBarStyle}>
-              <span style={{ fontSize: 14 }}>{passDirectionLabel}</span>
-              <span style={{ fontSize: 13, color: '#aaa' }}>
+            <div className="game-pass-bar">
+              <span>{passDirectionLabel}</span>
+              <span style={{ color: '#aaa' }}>
                 Selected: {selectedCards.length}/3
               </span>
               <button
                 onClick={handlePassCards}
                 disabled={selectedCards.length !== 3}
-                style={{
-                  ...passBtnStyle,
-                  opacity: selectedCards.length === 3 ? 1 : 0.4,
-                }}
+                className="game-pass-btn"
+                style={{ opacity: selectedCards.length === 3 ? 1 : 0.4 }}
               >
                 Pass Cards
               </button>
@@ -148,25 +155,42 @@ const GameScreen: React.FC<GameScreenProps> = ({
           )}
 
           {isPassing && gameState.passDirection === 'none' && (
-            <div style={passBarStyle}>
-              <span style={{ fontSize: 14, color: '#ffd600' }}>No passing this round — waiting for play to begin</span>
+            <div className="game-pass-bar">
+              <span style={{ color: '#ffd600' }}>No passing this round — waiting for play to begin</span>
             </div>
           )}
 
           {/* Player hand */}
-          <div style={{ marginTop: 10 }}>
-            <PlayerHand
-              cards={myCards}
-              selectedCardIds={selectedCards}
-              onCardClick={handleCardClick}
-              disabled={!isPassing && !(isPlaying && isMyTurn)}
-              maxSelectable={isPassing ? 3 : undefined}
-            />
+          <div className="player-hand">
+            {(() => {
+              const RANK_ORDER: Record<string, number> = {
+                '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8,
+                '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14,
+              };
+              const SUIT_ORDER: Record<string, number> = {
+                clubs: 0, diamonds: 1, spades: 2, hearts: 3,
+              };
+              const sorted = [...myCards].sort((a, b) => {
+                const suitDiff = SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit];
+                if (suitDiff !== 0) return suitDiff;
+                return RANK_ORDER[a.rank] - RANK_ORDER[b.rank];
+              });
+              return <PlayerHand
+                cards={sorted}
+                selectedCardIds={selectedCards}
+                onCardClick={handleCardClick}
+                disabled={!isPassing && !(isPlaying && isMyTurn)}
+                maxSelectable={isPassing ? 3 : undefined}
+              />;
+            })()}
           </div>
         </div>
 
         {/* Score panel */}
-        <div style={{ width: 260, flexShrink: 0, overflowY: 'auto' }}>
+        <div className={`game-score-panel ${showScorePanel ? 'visible' : ''}`}>
+          <button className="score-close" onClick={() => setShowScorePanel(false)}>
+            &times;
+          </button>
           <ScoreBoard
             players={gameState.players}
             roundScores={gameState.roundScores}
@@ -177,8 +201,8 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
       {/* Trick winner overlay */}
       {showTrickWinner && (
-        <div style={overlayStyle}>
-          <div style={trickWinnerStyle}>
+        <div className="game-overlay">
+          <div className="trick-winner-toast">
             {showTrickWinner} wins the trick!
           </div>
         </div>
@@ -186,32 +210,32 @@ const GameScreen: React.FC<GameScreenProps> = ({
 
       {/* Round complete modal */}
       {showRoundModal && roundComplete && (
-        <div style={overlayStyle}>
-          <div style={modalStyle}>
-            <h3 style={{ fontSize: 18, marginBottom: 12, color: '#ffd600' }}>Round Complete</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
+        <div className="game-overlay">
+          <div className="round-modal">
+            <h3>Round Complete</h3>
+            <table>
               <thead>
                 <tr>
-                  <th style={modalThStyle}>Player</th>
-                  <th style={modalThStyle}>Round</th>
-                  <th style={modalThStyle}>Total</th>
+                  <th>Player</th>
+                  <th>Round</th>
+                  <th>Total</th>
                 </tr>
               </thead>
               <tbody>
                 {gameState.players.map((p) => (
                   <tr key={p.id}>
-                    <td style={modalTdStyle}>{p.nickname}</td>
-                    <td style={{ ...modalTdStyle, textAlign: 'center' }}>
+                    <td>{p.nickname}</td>
+                    <td style={{ textAlign: 'center' }}>
                       {roundComplete.roundScores[p.id] ?? 0}
                     </td>
-                    <td style={{ ...modalTdStyle, textAlign: 'center', fontWeight: 'bold' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold' }}>
                       {roundComplete.totalScores[p.id] ?? 0}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <button onClick={dismissRoundModal} style={continueBtn}>
+            <button onClick={dismissRoundModal} className="continue-btn">
               Continue
             </button>
           </div>
@@ -219,106 +243,6 @@ const GameScreen: React.FC<GameScreenProps> = ({
       )}
     </div>
   );
-};
-
-const containerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100vh',
-  padding: 16,
-  gap: 10,
-};
-
-const topBarStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: '8px 16px',
-  background: 'rgba(0,0,0,0.3)',
-  borderRadius: 8,
-};
-
-const moonWarningStyle: React.CSSProperties = {
-  color: '#ff6b6b',
-  fontWeight: 'bold',
-  fontSize: 14,
-  animation: 'pulse 1s ease-in-out infinite',
-};
-
-const passBarStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: 16,
-  padding: '10px 16px',
-  marginTop: 10,
-  background: 'rgba(0,0,0,0.3)',
-  borderRadius: 8,
-};
-
-const passBtnStyle: React.CSSProperties = {
-  padding: '8px 20px',
-  background: '#e53e3e',
-  color: '#fff',
-  border: 'none',
-  borderRadius: 6,
-  fontSize: 14,
-  fontWeight: 'bold',
-  cursor: 'pointer',
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  background: 'rgba(0,0,0,0.6)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  zIndex: 100,
-};
-
-const trickWinnerStyle: React.CSSProperties = {
-  background: '#16213e',
-  padding: '16px 32px',
-  borderRadius: 12,
-  fontSize: 18,
-  fontWeight: 'bold',
-  color: '#ffd600',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-};
-
-const modalStyle: React.CSSProperties = {
-  background: '#16213e',
-  padding: 30,
-  borderRadius: 16,
-  minWidth: 350,
-  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-};
-
-const modalThStyle: React.CSSProperties = {
-  textAlign: 'left',
-  padding: '6px 10px',
-  borderBottom: '1px solid #555',
-  color: '#aaa',
-  fontSize: 12,
-};
-
-const modalTdStyle: React.CSSProperties = {
-  padding: '6px 10px',
-  borderBottom: '1px solid #333',
-  fontSize: 14,
-};
-
-const continueBtn: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 20px',
-  background: '#43a047',
-  color: '#fff',
-  border: 'none',
-  borderRadius: 8,
-  fontSize: 16,
-  fontWeight: 'bold',
-  cursor: 'pointer',
 };
 
 export default GameScreen;

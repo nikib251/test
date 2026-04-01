@@ -108,20 +108,11 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', position: 'relative' }}>
+    <div className="app-root">
       {/* Connection indicator */}
       <div
-        style={{
-          position: 'fixed',
-          top: 8,
-          left: 8,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          fontSize: 11,
-          color: connected ? '#43a047' : '#e53e3e',
-          zIndex: 200,
-        }}
+        className="connection-indicator"
+        style={{ color: connected ? '#43a047' : '#e53e3e' }}
       >
         <div
           style={{
@@ -136,21 +127,7 @@ const App: React.FC = () => {
 
       {/* Error toast */}
       {error && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: '#e53e3e',
-            color: '#fff',
-            padding: '8px 20px',
-            borderRadius: 8,
-            fontSize: 14,
-            zIndex: 200,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          }}
-        >
+        <div className="error-toast">
           {error.message}
         </div>
       )}

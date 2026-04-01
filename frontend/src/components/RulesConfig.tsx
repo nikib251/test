@@ -27,63 +27,36 @@ const PASS_OPTIONS: { value: PassDirection; label: string }[] = [
   { value: 'none', label: 'None' },
 ];
 
-const checkboxStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '6px 0',
-  cursor: 'pointer',
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: 14,
-  color: '#eee',
-};
-
-const descStyle: React.CSSProperties = {
-  fontSize: 11,
-  color: '#999',
-  marginLeft: 4,
-};
-
 const RulesConfig: React.FC<RulesConfigProps> = ({ rules, onChange, disabled }) => {
   const toggleRule = (key: keyof RuleVariants) => {
     onChange({ ...rules, [key]: !rules[key] });
   };
 
   return (
-    <div style={{ padding: 10 }}>
-      <h3 style={{ fontSize: 16, marginBottom: 10, color: '#ffd600' }}>Rule Variants</h3>
+    <div className="rules-config">
+      <h3>Rule Variants</h3>
 
       {RULE_LABELS.map(({ key, label, description }) => (
-        <label key={key} style={{ ...checkboxStyle, opacity: disabled ? 0.6 : 1 }}>
+        <label key={key} style={{ opacity: disabled ? 0.6 : 1 }}>
           <input
             type="checkbox"
             checked={rules[key] as boolean}
             onChange={() => toggleRule(key)}
             disabled={disabled}
           />
-          <span style={labelStyle}>
+          <span className="rule-label">
             {label}
-            <span style={descStyle}>— {description}</span>
+            <span className="rule-desc"> — {description}</span>
           </span>
         </label>
       ))}
 
-      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="rules-row">
         <label style={{ fontSize: 14, color: '#eee' }}>Pass Direction:</label>
         <select
           value={rules.passDirection}
           onChange={(e) => onChange({ ...rules, passDirection: e.target.value as PassDirection })}
           disabled={disabled}
-          style={{
-            background: '#2a2a4a',
-            color: '#eee',
-            border: '1px solid #555',
-            borderRadius: 4,
-            padding: '4px 8px',
-            fontSize: 14,
-          }}
         >
           {PASS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -93,7 +66,7 @@ const RulesConfig: React.FC<RulesConfigProps> = ({ rules, onChange, disabled }) 
         </select>
       </div>
 
-      <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="rules-row">
         <label style={{ fontSize: 14, color: '#eee' }}>End Score:</label>
         <input
           type="number"
@@ -102,15 +75,7 @@ const RulesConfig: React.FC<RulesConfigProps> = ({ rules, onChange, disabled }) 
           disabled={disabled}
           min={26}
           max={500}
-          style={{
-            width: 80,
-            background: '#2a2a4a',
-            color: '#eee',
-            border: '1px solid #555',
-            borderRadius: 4,
-            padding: '4px 8px',
-            fontSize: 14,
-          }}
+          style={{ width: 80 }}
         />
       </div>
     </div>

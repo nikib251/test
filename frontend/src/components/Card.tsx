@@ -38,21 +38,7 @@ function isSpecialCard(card: CardType): boolean {
 const Card: React.FC<CardProps> = ({ card, onClick, selected, disabled, small, faceDown }) => {
   if (faceDown) {
     return (
-      <div
-        style={{
-          width: small ? 50 : 70,
-          height: small ? 75 : 100,
-          borderRadius: 8,
-          background: 'linear-gradient(135deg, #2b5797, #1e3a5f)',
-          border: '2px solid #4a7ab5',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: small ? 16 : 24,
-          color: '#4a7ab5',
-          flexShrink: 0,
-        }}
-      >
+      <div className={`card-back ${small ? 'small-card' : ''}`}>
         {'\u2660'}
       </div>
     );
@@ -65,10 +51,8 @@ const Card: React.FC<CardProps> = ({ card, onClick, selected, disabled, small, f
   return (
     <div
       onClick={disabled ? undefined : onClick}
+      className={`card ${small ? 'small-card' : ''}`}
       style={{
-        width: small ? 50 : 70,
-        height: small ? 75 : 100,
-        borderRadius: 8,
         background: selected ? '#fffde7' : '#fff',
         border: `2px solid ${selected ? '#ffd600' : penalty ? '#e53e3e' : special ? '#43a047' : '#ccc'}`,
         boxShadow: selected
@@ -78,48 +62,19 @@ const Card: React.FC<CardProps> = ({ card, onClick, selected, disabled, small, f
           : '0 2px 4px rgba(0,0,0,0.15)',
         cursor: disabled ? 'default' : onClick ? 'pointer' : 'default',
         opacity: disabled ? 0.5 : 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 2,
-        fontSize: small ? 12 : 16,
-        fontWeight: 'bold',
         color,
-        transition: 'all 0.2s ease',
         transform: selected ? 'translateY(-10px)' : 'translateY(0)',
-        userSelect: 'none',
-        flexShrink: 0,
-        position: 'relative',
       }}
     >
-      <div style={{ fontSize: small ? 14 : 18, lineHeight: 1 }}>{card.rank}</div>
-      <div style={{ fontSize: small ? 18 : 26, lineHeight: 1 }}>{SUIT_SYMBOLS[card.suit]}</div>
+      <div className="card-rank">{card.rank}</div>
+      <div className="card-suit">{SUIT_SYMBOLS[card.suit]}</div>
       {penalty && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 2,
-            right: 4,
-            fontSize: 8,
-            color: '#e53e3e',
-            fontWeight: 'normal',
-          }}
-        >
+        <div className="card-indicator" style={{ color: '#e53e3e' }}>
           {'\u26A0'}
         </div>
       )}
       {special && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 2,
-            right: 4,
-            fontSize: 8,
-            color: '#43a047',
-            fontWeight: 'normal',
-          }}
-        >
+        <div className="card-indicator" style={{ color: '#43a047' }}>
           {'\u2605'}
         </div>
       )}
