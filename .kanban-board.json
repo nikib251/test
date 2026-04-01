@@ -1,0 +1,268 @@
+{
+  "userId": 156471140,
+  "projectName": "",
+  "workdir": "/home/ubuntu/projects/156471140/testdurak",
+  "taskDescription": "Давай сделаем карточную онлайн игру Червы. Она должна включать в себя:\n1. фронтенд и бэкенд\n2. ботов\n3. базу для хранения состояния игроков, статистики\n4. Очень сильного, самообучающегося бота\nпредложи стек технологии и составь команду субагентов",
+  "phase": "approved",
+  "columns": {
+    "backlog": {
+      "id": "backlog",
+      "label": "Backlog / Questions",
+      "cardIds": [
+        "wish-1775035874864-xxrd",
+        "wish-1775036323892-u2wn"
+      ]
+    },
+    "in_progress": {
+      "id": "in_progress",
+      "label": "In Progress",
+      "cardIds": [
+        "reviewer"
+      ]
+    },
+    "review": {
+      "id": "review",
+      "label": "Review",
+      "cardIds": []
+    },
+    "done": {
+      "id": "done",
+      "label": "Done",
+      "cardIds": [
+        "devops",
+        "db-architect",
+        "bot-dev",
+        "frontend-dev",
+        "backend-dev"
+      ]
+    }
+  },
+  "cards": {
+    "db-architect": {
+      "id": "db-architect",
+      "role": "Database Architect",
+      "skill": "PostgreSQL schema design, Redis state management",
+      "systemPrompt": "You are a database architect specializing in PostgreSQL and Redis for real-time multiplayer games.\n\nYour task: Design and implement the full database schema for an online Hearts card game.\n\n## Tables to create:\n- `players` (id, nickname, created_at, total_games, wins, losses)\n- `game_sessions` (id, status, created_at, finished_at, rule_variants JSONB, players JSONB)\n- `game_results` (id, game_id, player_id/nickname, score, placement, moon_shot_count)\n- `bot_card_weights` (id, situation_hash TEXT, card_code TEXT, weight FLOAT, play_count INT, updated_at) — for adaptive bot learning\n- `game_rules_presets` (id, name, rules JSONB)\n\n## Redis structures:\n- Active game state: `game:{gameId}` — full game state as JSON\n- Player session: `player:{socketId}` — nickname, gameId\n- Lobby list: `lobbies` — set of open game IDs\n\nWrite SQL migration files and document Redis key patterns.\n\nOutput files:\n- `backend/db/migrations/001_initial.sql`\n- `backend/db/redis-keys.md`\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id('express') → pick best match → query-docs('/expressjs/express', 'how to set up routes')",
+      "status": "done",
+      "phase": "execute",
+      "taskDepth": 1,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 1855,
+        "costUsd": 0.027825000000000003
+      },
+      "durationMs": 70280,
+      "outputPreview": "Both files are created. Here's a summary:\n\n**`backend/db/migrations/001_initial.sql`**\n- **players** — UUID PK, unique nickname, stats counters with CHECK constraints\n- **game_sessions** — status enum via CHECK, JSONB for rule_variants and round_scores, winning_nickname\n- **game_results** — FK to game_sessions (CASCADE), nickname-based, placement 1-4, hearts_taken, queen_taken\n- **bot_card_weights** — composite PK `(situation_hash, card_code, difficulty)`, weight 0.0-1.0, version column for future schema evolution\n- **game_rules_presets** — seeded with Standard, Omnibus Hearts, and Black Maria presets\n- Indexes on leaderboard columns, status, timestamps, and bot weight lookups\n\n**`backend/db/redis-keys.md`**\n- `game:{gameId}` — full GameState JSON, 2h TTL refreshed per trick\n- `lobby:{gameId}` — LobbyInfo JSON, 30min TTL (5min after game starts)\n- `player:{socketId}` — session mapping, 60s TTL on disconnect for reconnection grace\n- `lobbies` — SET of open game IDs, managed app-side\n- Full lifecycle documentation (create → join → start → play → end)\n",
+      "createdAt": "2026-04-01T09:29:28.666Z",
+      "startedAt": "2026-04-01T09:30:03.717Z",
+      "completedAt": "2026-04-01T09:38:22.857Z",
+      "title": "Database Schema & Models",
+      "description": "Проектирует и создаёт схему PostgreSQL (players, game_sessions, game_stats, bot_card_weights) и Redis-структуры для хранения активных игровых сессий. Пишет SQL-миграции, создаёт индексы, определяет типы данных. Файлы: backend/db/migrations/*.sql, backend/db/schema.sql, backend/db/redis-keys.md",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "backend-dev": {
+      "id": "backend-dev",
+      "role": "Backend Developer",
+      "skill": "Node.js, Express, Socket.IO, TypeScript, game logic",
+      "systemPrompt": "You are a backend developer building an online Hearts card game server with Node.js, Express, Socket.IO, and TypeScript.\n\n## Tech Stack\n- Node.js + TypeScript\n- Express (REST API)\n- Socket.IO (real-time game events)\n- pg (node-postgres) for PostgreSQL\n- ioredis for Redis\n- uuid for game IDs\n\n## Game Logic to implement:\n\n### Standard Hearts rules:\n- 4 players, 52-card deck\n- Pass 3 cards left/right/across/no-pass in rotation\n- Avoid hearts (1pt each) and Queen of Spades (13pts)\n- Heart break rule (can't lead hearts until broken)\n- Shoot the Moon: take ALL hearts + Queen of Spades = 0 pts, others +26\n\n### Rule variants (each toggleable via checkbox):\n1. **Jack of Diamonds** (-10 pts bonus)\n2. **Ten of Clubs doubles** (doubles final score)\n3. **No heart break** (can lead hearts anytime)\n4. **Queen of Spades breaks hearts**\n5. **Shooting the Moon gives -26** (instead of others +26)\n6. **Shooting the Sun** (win all tricks = shoot the moon bonus x2)\n7. **Omnibus Hearts** (Jack of Diamonds -10, standard + extra variants)\n8. **Blood on the Moon** (must take at least one heart per round or +5 penalty)\n9. **Black Maria variant** (Queen, King, Ace of Spades all penalized)\n10. **Pass direction: always left / always right / fixed / random**\n\n## Socket.IO Events:\n- `create_lobby` → creates game, returns lobbyId\n- `join_lobby` (lobbyId, nickname) → joins game\n- `start_game` → host starts, deals cards\n- `pass_cards` (cardIds[]) → pass 3 cards\n- `play_card` (cardId) → play a card\n- `game_state` → broadcast full game state to all players\n- `trick_complete` → who won the trick\n- `round_complete` → scores\n- `game_complete` → final scores, winner\n- `chat_message` → lobby chat\n- `bot_add` → add a bot to lobby\n\n## REST API:\n- GET /api/stats/:nickname\n- GET /api/leaderboard\n- GET /api/game/:gameId/history\n\nFile structure: backend/src/\n- index.ts (entry point)\n- socket/gameSocket.ts\n- game/HeartsGame.ts (core logic)\n- game/CardDeck.ts\n- game/RulesEngine.ts\n- db/postgres.ts\n- db/redis.ts\n- routes/api.ts\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id('socket.io') → pick best match → query-docs('/socketio/socket.io', 'server events')",
+      "status": "failed",
+      "phase": "execute",
+      "taskDepth": 1,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 2524,
+        "costUsd": 0.03786
+      },
+      "durationMs": 623580,
+      "outputPreview": "All files are in place. Let me do a quick review of the key logic areas to make sure everything is correct. Let me verify the pass direction logic - per the contracts, `passDirection: 'left'` should use the standard left/right/across/none rotation, while `'right'` means always right, etc:\n\nLooking back at my `RulesEngine.resolvePassDirection`, the logic is:\n- `'left'` -> standard rotation (left, right, across, none)\n- `'right'` -> always right\n- `'across'` -> always across\n- `'none'` -> no passing\n- `'random'` -> random pick\n\nThis matches the contract description \"Pass direction: always left / always right / fixed / random\" where `'left'` is the default rotation.\n\nLet me also verify the `noHeartBreak` rule. Looking at the RulesEngine: when `noHeartBreak` is true, we allow leading hearts anytime (return full hand). But wait - re-reading the rules, \"No heart break\" means hearts can be led anytime, i.e., the heart break restriction is disabled. My implementation correctly handles this.\n\nHowever, I notice one issue in `RulesEngine.getValidCards` - when `noHeartBreak` is true, I return the full hand. But the bot's `getLegalMoves` has different logic where it checks `noHeartBreak && !heartsBroken`. Let me re-check mine:\n\nLooking at my code at line in RulesEngine:\n```\nif (rules.noHeartBreak) {\n  return hand;  // Can lead hearts anytime\n}\n```\n\nThis is correct - if noHeartBreak is enabled, there's no restriction on leading hearts.\n\nLet me also verify that the `bloodOnTheMoon` rule from memory matches what we implemented. The memory says \"bloodOnTheMoon doubles reward only\" - but the contract says \"+5 penalty if no heart taken in round\". Let me check the contract again - yes, `bloodOnTheMoon: boolean // +5 penalty if no heart taken in round`. My implementation adds +5 penalty if a player took no hearts. That matches the contract.\n\nThe memory also mentions \"blackMaria adds K♠(+10) A♠(+7) penalties\" which matches my RulesEngine scoring.\n\nEverything looks correct and compiles cl",
+      "createdAt": "2026-04-01T09:29:28.666Z",
+      "startedAt": "2026-04-01T09:30:03.726Z",
+      "completedAt": "2026-04-01T09:47:36.162Z",
+      "title": "Backend Game Server & API",
+      "description": "Реализует сервер на Node.js + Express + Socket.IO + TypeScript. Включает: лобби-систему (создание/вход по коду), полную игровую логику Червей (все варианты правил: лунная стрельба, Джек бриллиантов, Десятка червей, Королева пик = 13 очков, передача карт и т.д.), WebSocket-события для реального времени, REST API для статистики. Файлы: backend/src/**/*.ts",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "bot-dev": {
+      "id": "bot-dev",
+      "role": "AI Bot Developer",
+      "skill": "Game AI, heuristics, adaptive statistics, TypeScript",
+      "systemPrompt": "You are an AI developer building a strong adaptive Hearts card game bot in TypeScript.\n\n## Bot Architecture:\n\n### HeartsBot.ts\nMain bot class that decides which card to play given the game state.\n\n### Decision Layers (in priority order):\n1. **Legal move filter** — only cards that are valid to play\n2. **Situation hashing** — hash current situation: (round_phase, position_in_trick, cards_in_trick, hand_size_bucket, void_suits)\n3. **Weight lookup** — fetch adaptive weights for each legal card from DB (or use defaults)\n4. **Heuristic scoring** — apply heuristics on top of weights:\n   - Avoid taking tricks with hearts/QoS when possible\n   - Lead low when safe, lead high to dump QoS on others\n   - Count played cards to know what's out\n   - If shooting the moon: aggressively collect all penalty cards\n   - Detect if another player is shooting the moon → block them\n   - Pass phase: pass highest danger cards (QoS, high hearts, high spades)\n5. **Weighted random selection** — pick card by softmax of (heuristic_score * adaptive_weight)\n\n### BotWeights.ts\n- `getWeights(situationHash, cardCodes[])` → Map<cardCode, weight>\n- `updateWeight(situationHash, cardCode, outcome)` — called after round ends\n  - outcome: delta score for that round (negative = good for the bot)\n  - Apply: new_weight = old_weight * 0.95 + outcome_signal * 0.05 (exponential moving average)\n  - Persist to PostgreSQL `bot_card_weights` table\n- Cache weights in memory (LRU cache, 10k entries)\n\n### Bot difficulty levels:\n- **Easy**: random from legal moves\n- **Medium**: heuristics only, no adaptive weights\n- **Hard**: full heuristics + adaptive weights\n\n### Integration:\n- Bot acts like a player (has a hand, receives game state)\n- Bot makes decisions with 500-1500ms artificial delay\n- Bot can be added to lobby to fill empty slots\n\nFiles:\n- `backend/src/bot/HeartsBot.ts`\n- `backend/src/bot/BotWeights.ts`\n- `backend/src/bot/CardCounter.ts` (tracks played cards)\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.",
+      "status": "done",
+      "phase": "execute",
+      "taskDepth": 1,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 1869,
+        "costUsd": 0.028035
+      },
+      "durationMs": 256149,
+      "outputPreview": "Good — my implementation already handles blackMaria (K♠=+10, A♠=+7) in `penaltyPoints()` and in the pass/play heuristics. Let me verify the penalty values match exactly.\n\nLooking at my code in `penaltyPoints()`:\n- K♠ = 10, A♠ = 7 under blackMaria — matches the memory.\n\nAnd in `scorePassCard()`, blackMaria boosts the pass score for A♠ and K♠ — correct.\n\nThe `bloodOnTheMoon` variant (doubles reward on successful moon shoot only) would be handled at the game engine level, not in the bot's card selection. The bot's moon detection logic is unaffected.\n\nHere's a summary of what was built:\n\n### Files Created\n\n**`backend/src/bot/types.ts`** — Local type definitions mirroring shared contracts (Card, GameState, RuleVariants, etc.). Will be replaced by imports from `../../types/game` once backend-dev creates it.\n\n**`backend/src/bot/CardCounter.ts`** — Tracks played cards during a round. Methods: `recordPlay`, `getPlayedCards`, `getRemainingCards(suit)`, `hasBeenPlayed`, `getPlayedInSuit`, `reset`.\n\n**`backend/src/bot/BotWeights.ts`** — Adaptive weight system with:\n- LRU cache (10k entries) for fast lookups\n- PostgreSQL persistence via `pg.Pool` (batched writes every 2s)\n- `getWeights()` — cache-first, then DB, then default (0.5)\n- `updateWeight()` — EMA: `new = old * 0.95 + signal * 0.05`, outcome normalized to [-1, 1]\n- `shutdown()` for graceful cleanup\n\n**`backend/src/bot/HeartsBot.ts`** — Main bot class with three difficulty tiers:\n- **Easy**: random legal move\n- **Medium**: heuristics + softmax selection (temperature 1.5)\n- **Hard**: heuristics * adaptive weights + softmax (temperature 1.0)\n\nKey features:\n- **Situation hashing**: `v1_` + 4-hex-char encoding (phase, trick position, hand bucket, void suits, hearts broken, lead suit)\n- **Legal move filter**: enforces 2♣ lead, follow-suit, no-hearts-first-trick, heart-break rules\n- **Heuristics**: safe play-under, QoS dumping, blackMaria danger cards, JoD preservation, void-suit exploitation, suit-count awareness\n- **Moon dete",
+      "createdAt": "2026-04-01T09:29:28.666Z",
+      "startedAt": "2026-04-01T09:30:03.741Z",
+      "completedAt": "2026-04-01T09:41:28.737Z",
+      "title": "Adaptive Hearts Bot AI",
+      "description": "Создаёт умного адаптивного бота для игры в Червы. Бот использует многоуровневую эвристику (безопасный сброс, атака, защита, подсчёт карт) и адаптивные веса карт по ситуации (ситуация = хэш: позиция, фаза, карты в трюке). После каждого хода результат корректирует вес карты в PostgreSQL. Файлы: backend/src/bot/HeartsBot.ts, backend/src/bot/BotWeights.ts",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "frontend-dev": {
+      "id": "frontend-dev",
+      "role": "Frontend Developer",
+      "skill": "React, TypeScript, Socket.IO client, CSS game UI",
+      "systemPrompt": "You are a frontend developer building a Hearts card game UI with React and TypeScript.\n\n## Tech Stack:\n- React 18 + TypeScript\n- Socket.IO client\n- CSS Modules or styled-components for styling\n- Vite as build tool\n\n## Screens to implement:\n\n### 1. Home Screen\n- Enter nickname input\n- Buttons: 'Create Game', 'Join Game' (enter code)\n- Link to Leaderboard\n\n### 2. Lobby Screen\n- Show lobby code (to share)\n- List of players joined (with bot slots)\n- 'Add Bot' button (Easy/Medium/Hard)\n- Rules configurator: checklist of all rule variants:\n  - [ ] Jack of Diamonds (-10 pts)\n  - [ ] Ten of Clubs doubles score\n  - [ ] No heart break rule\n  - [ ] Queen of Spades breaks hearts\n  - [ ] Shooting Moon gives -26 (instead of others +26)\n  - [ ] Shooting the Sun bonus\n  - [ ] Blood on the Moon (+5 if no heart taken)\n  - [ ] Black Maria (Q/K/A of Spades penalized)\n  - Pass direction: select (Left / Right / Across / Random / None)\n- 'Start Game' button (host only)\n- Lobby chat\n\n### 3. Game Table Screen\n- Green felt table background\n- 4 player positions (bottom = current player, others around)\n- Each player's card count + score display\n- Current trick in center (up to 4 cards)\n- Player's hand at bottom (clickable cards)\n- Card passing phase UI (select 3 cards to pass)\n- Whose turn indicator\n- Score panel (per round + total)\n- 'Moon shot' warning indicator\n- Animation: card played slides to center\n\n### 4. Round/Game Results Screen\n- Scores table per round\n- Winner announcement\n- Play Again / Main Menu buttons\n\n### 5. Leaderboard Screen\n- Table: nickname, wins, total games, win rate\n\n## Card Display:\n- Use SVG playing cards or styled divs with Unicode suit symbols ♠♥♦♣\n- Hearts and Queen of Spades highlighted in red/special color\n- Penalty cards visually marked\n\n## Socket.IO events to handle (client side):\n- Connect/disconnect\n- `game_state` → update full game state\n- `trick_complete` → show who won, then clear\n- `round_complete` → show round scores\n- `game_complete` → show final results\n- `pass_cards`, `play_card` → send to server\n\nFile structure: frontend/src/\n- App.tsx\n- screens/HomeScreen.tsx\n- screens/LobbyScreen.tsx\n- screens/GameScreen.tsx\n- screens/ResultsScreen.tsx\n- screens/LeaderboardScreen.tsx\n- components/Card.tsx\n- components/PlayerHand.tsx\n- components/GameTable.tsx\n- components/RulesConfig.tsx\n- components/ScoreBoard.tsx\n- hooks/useSocket.ts\n- types/game.ts\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id('react') → pick best match → query-docs('/facebook/react', 'hooks useState useEffect')",
+      "status": "failed",
+      "phase": "execute",
+      "taskDepth": 1,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 1741,
+        "costUsd": 0.026115
+      },
+      "durationMs": 349100,
+      "outputPreview": "All files created, TypeScript compiles with zero errors, and Vite builds successfully. Here's what was built:\n\n**Config files:**\n- `frontend/package.json` — React 18, TypeScript, Vite, Socket.IO client\n- `frontend/vite.config.ts` — proxy `/api` and `/socket.io` to backend on port 3001\n- `frontend/index.html` — entry HTML with dark theme base styles\n- `frontend/tsconfig.json` — strict TS config\n\n**Types & Infrastructure:**\n- `src/types/game.ts` — all shared types from contracts (Card, GameState, PlayerState, RuleVariants, etc.)\n- `src/hooks/useSocket.ts` — Socket.IO connection with reconnection, all event handlers, emitters for every client→server event\n\n**Components:**\n- `src/components/Card.tsx` — styled card with Unicode suits (♠♥♦♣), red for hearts/diamonds, penalty indicator for hearts + Q♠, star for J♦\n- `src/components/PlayerHand.tsx` — sorted hand display, clickable cards, selection highlighting with max-select support\n- `src/components/GameTable.tsx` — green felt table (#076324 gradient), 4 player positions, trick cards animate to center, hearts-broken indicator\n- `src/components/RulesConfig.tsx` — checkboxes for all 9 rule variants + pass direction dropdown + end score input\n- `src/components/ScoreBoard.tsx` — per-round scores table with totals\n\n**Screens:**\n- `src/screens/HomeScreen.tsx` — nickname input, Create/Join Game, leaderboard link\n- `src/screens/LobbyScreen.tsx` — lobby code (copyable), player list, Add/Remove Bot, rules config, chat, Start Game (host only)\n- `src/screens/GameScreen.tsx` — full game table, card passing UI, turn indicator, moon shot warning, trick winner overlay, round complete modal\n- `src/screens/ResultsScreen.tsx` — final scores table, winner announcement, Play Again / Main Menu\n- `src/screens/LeaderboardScreen.tsx` — fetches `/api/leaderboard`, displays rankings table\n\n**App routing:** `src/App.tsx` — state-based screen navigation (home → lobby → game → results), connection status indicator, error toasts\n",
+      "createdAt": "2026-04-01T09:29:28.666Z",
+      "startedAt": "2026-04-01T09:30:03.766Z",
+      "completedAt": "2026-04-01T09:43:01.700Z",
+      "title": "Hearts Game Frontend",
+      "description": "Создаёт React + TypeScript фронтенд для игры в Червы. Включает: главный экран (ввод никнейма), лобби (создать/войти), экран настройки правил с чекбоксами всех вариантов, игровой стол (карты в руке, трюк в центре, счёт, анимации), экран результатов, таблицу лидеров. Карты отображаются SVG или Unicode символами. Файлы: frontend/src/**/*.tsx",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "devops": {
+      "id": "devops",
+      "role": "DevOps Engineer",
+      "skill": "Docker, docker-compose, environment setup, nginx",
+      "systemPrompt": "You are a DevOps engineer setting up containerized infrastructure for a Hearts card game.\n\n## Services to configure:\n1. **PostgreSQL 15** — database, port 5432\n2. **Redis 7** — session/game state cache, port 6379\n3. **Backend** — Node.js app, port 3001\n4. **Frontend** — Vite dev or Nginx serving built React, port 80/3000\n5. **Nginx** (optional) — reverse proxy for API + WebSocket\n\n## Files to create:\n\n### docker-compose.yml\n- All 4-5 services\n- Networks, volumes for DB persistence\n- Environment variables from .env\n- Health checks for postgres and redis\n- depends_on with conditions\n\n### backend/Dockerfile\n- Node 20 alpine\n- Install deps, build TypeScript\n- Run compiled JS\n\n### frontend/Dockerfile\n- Multi-stage: build with Node, serve with nginx\n- Vite build output served as static files\n\n### nginx/nginx.conf\n- Proxy /api/* and /socket.io/* to backend:3001\n- Serve frontend static files\n- WebSocket upgrade headers\n\n### .env.example\n- DATABASE_URL\n- REDIS_URL\n- PORT\n- CORS_ORIGIN\n- NODE_ENV\n\n### backend/package.json and frontend/package.json\n- All required dependencies with versions\n- Build/start scripts\n\n### backend/tsconfig.json and frontend configuration (vite.config.ts)\n\nAlso create a root-level `start.sh` script that runs `docker-compose up --build`.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.",
+      "status": "done",
+      "phase": "execute",
+      "taskDepth": 1,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 1471,
+        "costUsd": 0.022065
+      },
+      "durationMs": 47768,
+      "outputPreview": "All Docker infrastructure files are created. Here's a summary:\n\n**Files created:**\n\n| File | Purpose |\n|---|---|\n| `docker-compose.yml` | 5 services (postgres, redis, backend, frontend, nginx) with health checks, depends_on conditions, persistent volume, shared network |\n| `backend/Dockerfile` | Multi-stage: build TypeScript with Node 20 alpine, run with production deps only |\n| `frontend/Dockerfile` | Multi-stage: Vite build with Node 20, serve with nginx:alpine |\n| `frontend/nginx.conf` | SPA fallback config for the frontend container's internal nginx |\n| `nginx/Dockerfile` | Reverse proxy nginx image with custom config |\n| `nginx/nginx.conf` | Proxies `/api/*` and `/socket.io/*` to backend:3001, everything else to frontend:80. WebSocket upgrade headers included with `map $http_upgrade` |\n| `.env.example` | All env vars per contract |\n| `start.sh` | Copies `.env.example` → `.env` if missing, runs `docker-compose up --build` |\n\n**Key details:**\n- **WebSocket support**: nginx uses `map $http_upgrade $connection_upgrade` and sets `Upgrade` + `Connection` headers on `/socket.io/` with 24h read/send timeouts\n- **Health checks**: postgres uses `pg_isready`, redis uses `redis-cli ping` — backend waits for both via `condition: service_healthy`\n- **DB migrations**: `backend/db/migrations/` is mounted into postgres's `docker-entrypoint-initdb.d` for automatic schema init\n- **Ports**: nginx on 80 (main entry), backend on 3001, frontend on 3000 (direct access), postgres 5432, redis 6379\n",
+      "createdAt": "2026-04-01T09:29:28.666Z",
+      "startedAt": "2026-04-01T09:30:03.791Z",
+      "completedAt": "2026-04-01T09:38:00.390Z",
+      "title": "Docker & Infrastructure Setup",
+      "description": "Создаёт docker-compose.yml для запуска всех сервисов: PostgreSQL, Redis, backend (Node.js), frontend (Vite/Nginx). Пишет Dockerfile для backend и frontend, настраивает .env.example, nginx конфиг для проксирования Socket.IO и API. Файлы: docker-compose.yml, backend/Dockerfile, frontend/Dockerfile, nginx/nginx.conf, .env.example",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "reviewer": {
+      "id": "reviewer",
+      "role": "Integration Reviewer",
+      "skill": "Code review, integration testing, TypeScript, game logic verification",
+      "systemPrompt": "You are a senior integration reviewer for a multiplayer Hearts card game.\n\nReview all produced code for:\n1. Type consistency between frontend and backend (shared game state types)\n2. Socket.IO event names match between client and server\n3. Hearts game logic correctness (dealing, passing, trick-taking, scoring all rule variants)\n4. Bot integration — does it correctly implement the HeartsBot interface?\n5. Database schema matches what the backend actually queries\n6. Docker services correctly connected\n7. Missing error handling (disconnects, invalid moves)\n8. Security: nickname sanitization, rate limiting on moves\n\nOutput: either APPROVED or NEEDS_CHANGES with specific file+line issues.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.",
+      "status": "executing",
+      "phase": "review",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 0,
+        "costUsd": 0
+      },
+      "durationMs": 0,
+      "outputPreview": "",
+      "createdAt": "2026-04-01T09:29:28.666Z",
+      "startedAt": "2026-04-01T09:47:44.647Z",
+      "completedAt": null,
+      "title": "Integration Review & QA",
+      "description": "Проверяет интеграцию всех компонентов: совпадение типов между фронтом и бэком, корректность Socket.IO событий, полноту игровой логики, работу адаптивного бота. Выявляет конфликты, баги и несоответствия.",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "wish-1775035874864-xxrd": {
+      "id": "wish-1775035874864-xxrd",
+      "role": "",
+      "skill": "",
+      "systemPrompt": "",
+      "status": "ready",
+      "phase": "",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 0,
+        "costUsd": 0
+      },
+      "durationMs": 0,
+      "outputPreview": "",
+      "createdAt": "2026-04-01T09:31:14.864Z",
+      "startedAt": null,
+      "completedAt": null,
+      "title": "Уровни сложности",
+      "description": "Хочется чтобы были уровни сложности(штук 10, от простейшег до самого сложного)",
+      "cardType": "user_wish",
+      "wishCategory": "feature",
+      "createdBy": "156471140"
+    },
+    "wish-1775036323892-u2wn": {
+      "id": "wish-1775036323892-u2wn",
+      "role": "",
+      "skill": "",
+      "systemPrompt": "",
+      "status": "ready",
+      "phase": "",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 0,
+        "costUsd": 0
+      },
+      "durationMs": 0,
+      "outputPreview": "",
+      "createdAt": "2026-04-01T09:38:43.892Z",
+      "startedAt": null,
+      "completedAt": null,
+      "title": "Адаптивная верстка",
+      "description": "верстка под компьютер с адаптивным разрешением, а так же под ios, android с браузера",
+      "cardType": "user_wish",
+      "wishCategory": "feature",
+      "createdBy": "156471140"
+    }
+  },
+  "orchestratorCost": {
+    "input": 106824,
+    "output": 8005,
+    "costUsd": 0.44054699999999997
+  },
+  "totalCostUsd": 0.5824469999999999,
+  "createdAt": "2026-04-01T09:29:21.678Z",
+  "updatedAt": "2026-04-01T09:47:44.647Z"
+}
