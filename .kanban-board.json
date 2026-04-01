@@ -19,7 +19,8 @@
       "label": "In Progress",
       "cardIds": [
         "reviewer",
-        "context-restorer"
+        "context-restorer",
+        "daily-bonus"
       ]
     },
     "review": {
@@ -215,7 +216,12 @@
       "phase": "",
       "taskDepth": 0,
       "parentCardId": null,
-      "userComments": [],
+      "userComments": [
+        {
+          "text": "сделай 15 уровней сложности",
+          "at": "2026-04-01T10:44:34.650Z"
+        }
+      ],
       "attachments": [],
       "pendingQuestion": null,
       "tokenUsage": {
@@ -397,14 +403,41 @@
       "cardType": "user_wish",
       "wishCategory": "feature",
       "createdBy": "156471140"
+    },
+    "daily-bonus": {
+      "id": "daily-bonus",
+      "role": "Full-Stack Developer",
+      "skill": "TypeScript, Node.js, Express, PostgreSQL, React, Socket.IO, game mechanics",
+      "systemPrompt": "You are a full-stack developer implementing a daily bonus mechanic for a multiplayer Hearts card game.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id(\"express\") → pick best match → query-docs(\"/expressjs/express\", \"routing\")\n\n## Your Task\nImplement a daily bonus system for the Hearts game.\n\n## Step 1: Read existing code\nRead these files first to understand the existing structure:\n- backend/src/types/game.ts\n- backend/src/db/schema.sql (or migrations folder)\n- backend/src/routes/ (REST API routes)\n- backend/src/index.ts (main server)\n- frontend/src/screens/HomeScreen.tsx\n- frontend/src/types/game.ts\n- frontend/src/styles/ (CSS files)\n\n## Daily Bonus Design\n\n### Reward Structure (streak-based):\n- Day 1: 10 coins\n- Day 2: 15 coins\n- Day 3: 20 coins\n- Day 4: 25 coins\n- Day 5: 30 coins\n- Day 6: 40 coins\n- Day 7: 50 coins + special badge \"Неделя подряд\"\n- If streak broken (missed a day): reset to Day 1\n- Streak continues if player claims within 48h window (grace period)\n\n### Backend:\n1. **DB migration**: Add to schema or create new migration file `backend/src/db/migrations/003_daily_bonus.sql`:\n   ```sql\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS coins INTEGER DEFAULT 0;\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS daily_streak INTEGER DEFAULT 0;\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS last_bonus_at TIMESTAMPTZ;\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS total_bonus_claimed INTEGER DEFAULT 0;\n   ```\n2. **REST endpoint** `POST /api/daily-bonus/claim` — claims the bonus for the current player\n   - Request body: `{ playerId: string }`\n   - Response: `{ success: boolean, coins: number, streak: number, nextBonus: string, alreadyClaimed: boolean }`\n3. **REST endpoint** `GET /api/daily-bonus/status` — get current bonus status\n   - Query: `?playerId=xxx`\n   - Response: `{ canClaim: boolean, streak: number, coins: number, nextReward: number, hoursUntilNext: number }`\n4. Add the routes to the main Express app\n\n### Frontend:\n1. **DailyBonusModal component** (`frontend/src/components/DailyBonusModal.tsx`):\n   - Shows a 7-day calendar strip with day numbers and coin amounts\n   - Highlights current streak days (green checkmark)\n   - Highlights today's reward (pulsing animation)\n   - Shows \"Получить\" button if bonus available, \"Уже получено\" if claimed\n   - Shows coins icon (🪙) and amount\n   - Shows streak count: \"Серия: X дней\"\n   - Animate coins flying to the player's balance on claim\n\n2. **Integrate into HomeScreen**:\n   - On HomeScreen mount, call GET /api/daily-bonus/status\n   - If `canClaim === true`, show the modal automatically\n   - Add a \"🪙 Ежедневный бонус\" button on HomeScreen that opens the modal manually\n   - Show current coin balance on HomeScreen: \"🪙 {coins}\"\n\n3. **CSS** (`frontend/src/styles/daily-bonus.css`):\n   - Modal overlay with backdrop blur\n   - 7-day strip with responsive layout\n   - Pulsing animation for claimable day\n   - Coin fly animation (keyframes)\n   - Mobile-friendly (min touch target 44px)\n   - Matches existing game visual style (dark theme, gold accents)\n\n### playerId handling:\n- Look at how the existing code identifies players (check HomeScreen and how playerName/playerId is stored — likely localStorage)\n- Use the same identification mechanism\n- If players are identified by name (not UUID), use name as the key\n\n## After implementation:\n- Run `cd backend && npm run build` — must succeed\n- Run `cd frontend && npm run build` — must succeed\n- Commit: git add -A && git commit -m 'feat: daily bonus system with streak mechanic'\n\n## Constraints:\n- TypeScript strict mode, no `any`\n- Mobile-first CSS\n- Graceful error handling (if DB unavailable, don't crash)\n- The bonus must be claimable once per day (UTC day boundary)\n- Store streak and last claim time in PostgreSQL",
+      "status": "executing",
+      "phase": "execute",
+      "taskDepth": 1,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 0,
+        "costUsd": 0
+      },
+      "durationMs": 0,
+      "outputPreview": "",
+      "createdAt": "2026-04-01T10:50:43.614Z",
+      "startedAt": "2026-04-01T10:50:49.901Z",
+      "completedAt": null,
+      "title": "Ежедневный бонус",
+      "description": "• POST /api/daily-bonus/claim — получить бонус\n• GET /api/daily-bonus/status — статус бонуса игрока\n• 7-дневная полоска с нарастающими наградами (10→50 монет)\n• Сброс серии при пропуске дня (grace period 48ч)\n• День 7: бонус + бейдж «Неделя подряд»\n• DailyBonusModal компонент с анимацией монет\n• Автопоказ на HomeScreen если бонус доступен\n• Баланс монет на HomeScreen\n• DB миграция: coins, daily_streak, last_bonus_at",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
     }
   },
   "orchestratorCost": {
-    "input": 193680,
-    "output": 13345,
-    "costUsd": 0.781215
+    "input": 241228,
+    "output": 15475,
+    "costUsd": 0.9558090000000001
   },
-  "totalCostUsd": 0.96972,
+  "totalCostUsd": 1.144314,
   "createdAt": "2026-04-01T09:29:21.678Z",
-  "updatedAt": "2026-04-01T10:42:54.221Z"
+  "updatedAt": "2026-04-01T10:50:49.901Z"
 }

@@ -19,5 +19,21 @@ export declare function getLeaderboard(): Promise<any>;
 export declare function getGameHistory(gameId: string): Promise<{
     rounds: any;
 } | null>;
+export interface DailyBonusStatus {
+    canClaim: boolean;
+    streak: number;
+    coins: number;
+    nextReward: number;
+    hoursUntilNext: number;
+}
+export interface DailyBonusClaimResult {
+    success: boolean;
+    coins: number;
+    streak: number;
+    nextBonus: string;
+    alreadyClaimed: boolean;
+}
+export declare function getDailyBonusStatus(nickname: string): Promise<DailyBonusStatus>;
+export declare function claimDailyBonus(nickname: string): Promise<DailyBonusClaimResult>;
 export { pool };
 //# sourceMappingURL=postgres.d.ts.map

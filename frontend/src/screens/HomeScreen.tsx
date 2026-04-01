@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import type { DailyBonusStatus, DailyBonusClaimResult } from '../types/game';
+import DailyBonusModal from '../components/DailyBonusModal';
 
 interface HomeScreenProps {
   onCreateGame: (nickname: string) => void;
@@ -11,6 +13,42 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onCreateGame, onJoinGame, onLea
   const [gameCode, setGameCode] = useState('');
   const [showJoin, setShowJoin] = useState(false);
   const [error, setError] = useState('');
+  const [bonusStatus, setBonusStatus] = useState<DailyBonusStatus | null>(null);
+  const [showBonusModal, setShowBonusModal] = useState(false);
+  const [coinBalance, setCoinBalance] = useState(0);
+  const [bonusCheckedFor, setBonusCheckedFor] = useState('');
+
+  const fetchBonusStatus = useCallback(async (nick: string) => {
+    if (!nick.trim()) return;
+    try {
+      const res = await fetch(`/api/daily-bonus/status?playerId=${encodeURIComponent(nick.trim())}`);
+      if (!res.ok) return;
+      const data: DailyBonusStatus = await res.json();
+      setBonusStatus(data);
+      setCoinBalance(data.coins);
+      if (data.canClaim) {
+        setShowBonusModal(true);
+      }
+    } catch {
+      // Silently fail — don't block the home screen
+    }
+  }, []);
+
+  // Check bonus when nickname changes (debounced on blur / enter)
+  useEffect(() => {
+    if (nickname.trim() && nickname.trim() !== bonusCheckedFor) {
+      const timer = setTimeout(() => {
+        setBonusCheckedFor(nickname.trim());
+        fetchBonusStatus(nickname);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [nickname, bonusCheckedFor, fetchBonusStatus]);
+
+  const handleBonusClaimed = useCallback((result: DailyBonusClaimResult) => {
+    setCoinBalance(result.coins);
+    setBonusStatus((prev) => prev ? { ...prev, canClaim: false, streak: result.streak, coins: result.coins } : prev);
+  }, []);
 
   const handleCreate = () => {
     if (!nickname.trim()) {
@@ -41,6 +79,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onCreateGame, onJoinGame, onLea
         <p className="home-subtitle">
           Classic card game for 4 players
         </p>
+
+        {nickname.trim() && (
+          <div className="home-coin-balance">
+            {'\ud83e\ude99'} {coinBalance}
+          </div>
+        )}
 
         {error && (
           <div style={{
@@ -97,11 +141,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onCreateGame, onJoinGame, onLea
             </div>
           )}
 
+          {nickname.trim() && (
+            <button className="home-bonus-btn" onClick={() => setShowBonusModal(true)}>
+              {'\ud83e\ude99'} {'\u0415\u0436\u0435\u0434\u043d\u0435\u0432\u043d\u044b\u0439 \u0431\u043e\u043d\u0443\u0441'}
+            </button>
+          )}
+
           <button onClick={onLeaderboard} className="home-btn-link">
             Leaderboard
           </button>
         </div>
       </div>
+
+      {showBonusModal && bonusStatus && (
+        <DailyBonusModal
+          status={bonusStatus}
+          nickname={nickname.trim()}
+          onClose={() => setShowBonusModal(false)}
+          onClaimed={handleBonusClaimed}
+        />
+      )}
     </div>
   );
 };

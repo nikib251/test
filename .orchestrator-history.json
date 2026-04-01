@@ -337,5 +337,64 @@
         "text": "Адаптивная вёрстка готова! Вот что сделано:\n\n**📱 Mobile (320px–479px):**\n- Карты с отрицательным margin — 13 карт влезают на iPhone SE\n- Landscape-режим: карты масштабируются по высоте (`vh`)\n- Touch: tap для выбора/игры карты, overlay закрывается тапом\n\n**📐 Tablet (768px+):**\n- Промежуточный layout\n- Игровой стол заполняет весь экран\n\n**🖥️ Desktop (1024px+):**\n- Оригинальный дизайн сохранён\n\n**iOS/Android фиксы:**\n- `safe-area-inset` для notch/динамического острова\n- `-webkit-tap-highlight-color: transparent`\n- Input zoom fix (font-size ≥ 16px)\n- `100dvh` с fallback на `100vh`\n- Блокировка overscroll/bounce\n\nДалее — **чат в лобби**? Или сначала обновим документацию?"
       }
     ]
+  },
+  {
+    "role": "user",
+    "content": "[Working directory: /home/ubuntu/projects/156471140/testdurak]\n\nсоздай новую задачу, уровня sub, нужна механика ежедневного бонуса"
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_014prYUyz6wv2rvLEJ2x4pNT",
+        "name": "plan_agents",
+        "input": {
+          "agents": [
+            {
+              "id": "daily-bonus",
+              "role": "Full-Stack Developer",
+              "skill": "TypeScript, Node.js, Express, PostgreSQL, React, Socket.IO, game mechanics",
+              "system_prompt": "You are a full-stack developer implementing a daily bonus mechanic for a multiplayer Hearts card game.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id(\"express\") → pick best match → query-docs(\"/expressjs/express\", \"routing\")\n\n## Your Task\nImplement a daily bonus system for the Hearts game.\n\n## Step 1: Read existing code\nRead these files first to understand the existing structure:\n- backend/src/types/game.ts\n- backend/src/db/schema.sql (or migrations folder)\n- backend/src/routes/ (REST API routes)\n- backend/src/index.ts (main server)\n- frontend/src/screens/HomeScreen.tsx\n- frontend/src/types/game.ts\n- frontend/src/styles/ (CSS files)\n\n## Daily Bonus Design\n\n### Reward Structure (streak-based):\n- Day 1: 10 coins\n- Day 2: 15 coins\n- Day 3: 20 coins\n- Day 4: 25 coins\n- Day 5: 30 coins\n- Day 6: 40 coins\n- Day 7: 50 coins + special badge \"Неделя подряд\"\n- If streak broken (missed a day): reset to Day 1\n- Streak continues if player claims within 48h window (grace period)\n\n### Backend:\n1. **DB migration**: Add to schema or create new migration file `backend/src/db/migrations/003_daily_bonus.sql`:\n   ```sql\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS coins INTEGER DEFAULT 0;\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS daily_streak INTEGER DEFAULT 0;\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS last_bonus_at TIMESTAMPTZ;\n   ALTER TABLE players ADD COLUMN IF NOT EXISTS total_bonus_claimed INTEGER DEFAULT 0;\n   ```\n2. **REST endpoint** `POST /api/daily-bonus/claim` — claims the bonus for the current player\n   - Request body: `{ playerId: string }`\n   - Response: `{ success: boolean, coins: number, streak: number, nextBonus: string, alreadyClaimed: boolean }`\n3. **REST endpoint** `GET /api/daily-bonus/status` — get current bonus status\n   - Query: `?playerId=xxx`\n   - Response: `{ canClaim: boolean, streak: number, coins: number, nextReward: number, hoursUntilNext: number }`\n4. Add the routes to the main Express app\n\n### Frontend:\n1. **DailyBonusModal component** (`frontend/src/components/DailyBonusModal.tsx`):\n   - Shows a 7-day calendar strip with day numbers and coin amounts\n   - Highlights current streak days (green checkmark)\n   - Highlights today's reward (pulsing animation)\n   - Shows \"Получить\" button if bonus available, \"Уже получено\" if claimed\n   - Shows coins icon (🪙) and amount\n   - Shows streak count: \"Серия: X дней\"\n   - Animate coins flying to the player's balance on claim\n\n2. **Integrate into HomeScreen**:\n   - On HomeScreen mount, call GET /api/daily-bonus/status\n   - If `canClaim === true`, show the modal automatically\n   - Add a \"🪙 Ежедневный бонус\" button on HomeScreen that opens the modal manually\n   - Show current coin balance on HomeScreen: \"🪙 {coins}\"\n\n3. **CSS** (`frontend/src/styles/daily-bonus.css`):\n   - Modal overlay with backdrop blur\n   - 7-day strip with responsive layout\n   - Pulsing animation for claimable day\n   - Coin fly animation (keyframes)\n   - Mobile-friendly (min touch target 44px)\n   - Matches existing game visual style (dark theme, gold accents)\n\n### playerId handling:\n- Look at how the existing code identifies players (check HomeScreen and how playerName/playerId is stored — likely localStorage)\n- Use the same identification mechanism\n- If players are identified by name (not UUID), use name as the key\n\n## After implementation:\n- Run `cd backend && npm run build` — must succeed\n- Run `cd frontend && npm run build` — must succeed\n- Commit: git add -A && git commit -m 'feat: daily bonus system with streak mechanic'\n\n## Constraints:\n- TypeScript strict mode, no `any`\n- Mobile-first CSS\n- Graceful error handling (if DB unavailable, don't crash)\n- The bonus must be claimable once per day (UTC day boundary)\n- Store streak and last claim time in PostgreSQL",
+              "title": "Ежедневный бонус",
+              "description": "• POST /api/daily-bonus/claim — получить бонус\n• GET /api/daily-bonus/status — статус бонуса игрока\n• 7-дневная полоска с нарастающими наградами (10→50 монет)\n• Сброс серии при пропуске дня (grace period 48ч)\n• День 7: бонус + бейдж «Неделя подряд»\n• DailyBonusModal компонент с анимацией монет\n• Автопоказ на HomeScreen если бонус доступен\n• Баланс монет на HomeScreen\n• DB миграция: coins, daily_streak, last_bonus_at",
+              "task_depth": 1
+            }
+          ]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_014prYUyz6wv2rvLEJ2x4pNT",
+        "content": "Agents approved by user and registered:\n  - daily-bonus (Full-Stack Developer): TypeScript, Node.js, Express, PostgreSQL, React, Socket.IO, game mechanics"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_014NPwsD5hh4kUp9B9gXYU98",
+        "name": "run_agent",
+        "input": {
+          "agent_id": "daily-bonus",
+          "task": "Реализуй систему ежедневного бонуса для игры Hearts. Сначала прочитай существующий код (схему БД, роуты, HomeScreen, типы). Затем: создай миграцию БД, REST эндпоинты, DailyBonusModal компонент с анимацией монет, интегрируй в HomeScreen с автопоказом и балансом монет. Проверь компиляцию обеих частей. Закоммить.",
+          "workdir": "/home/ubuntu/projects/156471140/testdurak",
+          "phase": "execute"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
   }
 ]

@@ -9,6 +9,7 @@ const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const cors_1 = __importDefault(require("cors"));
 const api_1 = __importDefault(require("./routes/api"));
+const dailyBonus_1 = __importDefault(require("./routes/dailyBonus"));
 const gameSocket_1 = require("./socket/gameSocket");
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost';
@@ -28,6 +29,7 @@ app.use((0, cors_1.default)({ origin: CORS_ORIGIN }));
 app.use(express_1.default.json());
 // REST API routes
 app.use('/api', api_1.default);
+app.use('/api', dailyBonus_1.default);
 // Socket.IO setup
 (0, gameSocket_1.setupGameSocket)(io);
 httpServer.listen(PORT, () => {

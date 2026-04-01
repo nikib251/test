@@ -1,9 +1,9 @@
 {
-  "id": "6e1492ad-6bec-4b96-8e66-b0254c8d278c",
+  "id": "6f45cc71-8206-4a3c-8546-9755e8e0e6b3",
   "userId": 156471140,
   "projectName": "testdurak",
-  "task": "Давай",
-  "status": "done",
+  "task": "создай новую задачу, уровня sub, нужна механика ежедневного бонуса",
+  "status": "executing",
   "phase": "plan",
   "pendingQuestions": [],
   "answeredQuestions": {},
@@ -17,9 +17,9 @@
     "realtime": 0,
     "batch": 0
   },
-  "createdAt": "2026-04-01T10:30:57.901Z",
-  "updatedAt": "2026-04-01T10:43:01.699Z",
-  "startedAt": "2026-04-01T10:30:57.902Z",
-  "completedAt": "2026-04-01T10:43:01.699Z",
+  "createdAt": "2026-04-01T10:50:03.861Z",
+  "updatedAt": "2026-04-01T10:50:03.861Z",
+  "startedAt": "2026-04-01T10:50:03.861Z",
+  "completedAt": null,
   "errorLog": []
 }

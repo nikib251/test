@@ -1,0 +1,257 @@
+/* ============================================================
+   Daily Bonus Modal — Styles
+   Dark theme with gold accents, mobile-first
+   ============================================================ */
+
+/* --- Overlay --- */
+.daily-bonus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: dbFadeIn 0.3s ease;
+}
+
+@keyframes dbFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* --- Modal Card --- */
+.daily-bonus-modal {
+  background: linear-gradient(145deg, #1e1e2e, #2a2a3e);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 16px;
+  padding: 24px 20px;
+  width: 92vw;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.08);
+  animation: dbSlideUp 0.35s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes dbSlideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.daily-bonus-modal h2 {
+  text-align: center;
+  color: #ffd700;
+  font-size: clamp(18px, 4vw, 24px);
+  margin: 0 0 4px;
+}
+
+.daily-bonus-streak {
+  text-align: center;
+  color: #aaa;
+  font-size: clamp(12px, 2.5vw, 14px);
+  margin-bottom: 20px;
+}
+
+/* --- 7-Day Strip --- */
+.daily-bonus-strip {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: nowrap;
+  margin-bottom: 20px;
+}
+
+.daily-bonus-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: clamp(40px, 11vw, 50px);
+  height: clamp(60px, 16vw, 76px);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+  min-width: 0;
+}
+
+.daily-bonus-day-label {
+  font-size: clamp(9px, 2vw, 11px);
+  color: #888;
+  font-weight: 600;
+}
+
+.daily-bonus-day-coins {
+  font-size: clamp(11px, 2.5vw, 14px);
+  color: #ccc;
+  font-weight: 700;
+}
+
+.daily-bonus-day-icon {
+  font-size: clamp(14px, 3vw, 18px);
+}
+
+/* Claimed days (past streak) */
+.daily-bonus-day.claimed {
+  background: rgba(72, 187, 120, 0.15);
+  border-color: rgba(72, 187, 120, 0.5);
+}
+
+.daily-bonus-day.claimed .daily-bonus-day-coins {
+  color: #68d391;
+}
+
+/* Today's reward — pulsing */
+.daily-bonus-day.today {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.6);
+  animation: dbPulse 1.5s ease-in-out infinite;
+}
+
+.daily-bonus-day.today .daily-bonus-day-coins {
+  color: #ffd700;
+}
+
+/* Already claimed today */
+.daily-bonus-day.today-claimed {
+  background: rgba(72, 187, 120, 0.15);
+  border-color: rgba(72, 187, 120, 0.5);
+}
+
+.daily-bonus-day.today-claimed .daily-bonus-day-coins {
+  color: #68d391;
+}
+
+/* Future days */
+.daily-bonus-day.future {
+  opacity: 0.5;
+}
+
+@keyframes dbPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.3); }
+  50%      { box-shadow: 0 0 12px 4px rgba(255, 215, 0, 0.2); }
+}
+
+/* --- Claim Button --- */
+.daily-bonus-claim-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffd700, #f0a500);
+  color: #1a1a2e;
+  font-size: clamp(14px, 3vw, 18px);
+  font-weight: 700;
+  cursor: pointer;
+  min-height: var(--min-touch, 44px);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.daily-bonus-claim-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+}
+
+.daily-bonus-claim-btn:active {
+  transform: scale(0.98);
+}
+
+.daily-bonus-claim-btn:disabled {
+  background: linear-gradient(135deg, #555, #444);
+  color: #999;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Close Button --- */
+.daily-bonus-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #aaa;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--min-touch, 44px);
+  min-height: var(--min-touch, 44px);
+}
+
+.daily-bonus-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* --- Coin Fly Animation --- */
+.daily-bonus-coin-fly {
+  position: fixed;
+  font-size: 24px;
+  pointer-events: none;
+  z-index: 1001;
+  animation: coinFly 0.8s ease-in forwards;
+}
+
+@keyframes coinFly {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  60%  { opacity: 1; transform: translate(var(--fly-x, 0px), var(--fly-y, -80px)) scale(1.3); }
+  100% { opacity: 0; transform: translate(var(--fly-x, 0px), var(--fly-y, -120px)) scale(0.5); }
+}
+
+/* --- Badge --- */
+.daily-bonus-badge {
+  text-align: center;
+  color: #ffd700;
+  font-size: clamp(12px, 2.5vw, 14px);
+  margin-top: 12px;
+  padding: 8px;
+  background: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* --- HomeScreen Bonus Button --- */
+.home-bonus-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 215, 0, 0.08);
+  color: #ffd700;
+  font-size: clamp(13px, 2.5vw, 15px);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: var(--min-touch, 44px);
+  transition: background 0.2s;
+}
+
+.home-bonus-btn:hover {
+  background: rgba(255, 215, 0, 0.15);
+}
+
+/* --- Coin Balance Display --- */
+.home-coin-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #ffd700;
+  font-size: clamp(14px, 3vw, 18px);
+  font-weight: 700;
+  margin-bottom: 16px;
+}

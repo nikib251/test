@@ -115,6 +115,22 @@ export interface LeaderboardEntry {
   winRate: number;
 }
 
+export interface DailyBonusStatus {
+  canClaim: boolean;
+  streak: number;
+  coins: number;
+  nextReward: number;
+  hoursUntilNext: number;
+}
+
+export interface DailyBonusClaimResult {
+  success: boolean;
+  coins: number;
+  streak: number;
+  nextBonus: string;
+  alreadyClaimed: boolean;
+}
+
 export const DEFAULT_RULES: RuleVariants = {
   jackOfDiamonds: false,
   tenOfClubsDoubles: false,
