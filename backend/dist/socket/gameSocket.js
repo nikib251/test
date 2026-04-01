@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupGameSocket = setupGameSocket;
 const uuid_1 = require("uuid");
 const HeartsGame_1 = require("../game/HeartsGame");
+const game_1 = require("../types/game");
 const redis_1 = require("../db/redis");
 const postgres_1 = require("../db/postgres");
 // In-memory game instances (source of truth during active games)
@@ -139,7 +140,8 @@ function setupGameSocket(io) {
                 socket.emit('error', { code: 'not_your_turn', message: 'Only host can add bots' });
                 return;
             }
-            const bot = game.addBot(data.difficulty);
+            const difficulty = (0, game_1.parseBotDifficulty)(data.difficulty);
+            const bot = game.addBot(difficulty);
             if (!bot) {
                 socket.emit('error', { code: 'lobby_full', message: 'Lobby is full' });
                 return;

@@ -6,7 +6,10 @@ export interface Card {
     rank: Rank;
 }
 export type PlayerRole = 'human' | 'bot';
-export type BotDifficulty = 'easy' | 'medium' | 'hard';
+export type BotDifficulty = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+/** Backward-compatible mapping from legacy string values */
+export declare function parseBotDifficulty(value: string | number): BotDifficulty;
+export declare const BOT_DIFFICULTY_NAMES: Record<BotDifficulty, string>;
 export type PassDirection = 'left' | 'right' | 'across' | 'none' | 'random';
 export type GamePhase = 'waiting' | 'passing' | 'playing' | 'round_end' | 'game_end';
 export interface RuleVariants {

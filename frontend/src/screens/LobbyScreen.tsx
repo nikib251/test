@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { LobbyInfo, BotDifficulty, RuleVariants, ChatMessage } from '../types/game';
+import { BOT_DIFFICULTY_NAMES } from '../types/game';
 import RulesConfig from '../components/RulesConfig';
 
 interface LobbyScreenProps {
@@ -26,6 +27,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
   onLeave,
 }) => {
   const [chatInput, setChatInput] = useState('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<BotDifficulty>(5);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const isHost = myPlayerId === lobby.hostId;
 
@@ -74,9 +76,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
                 <div key={p.id} style={playerRowStyle}>
                   <div>
                     <span style={{ fontWeight: 'bold' }}>{p.nickname}</span>
-                    {p.role === 'bot' && (
+                    {p.role === 'bot' && p.difficulty != null && (
                       <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>
-                        Bot ({p.difficulty})
+                        Bot ({p.difficulty} — {BOT_DIFFICULTY_NAMES[p.difficulty as BotDifficulty]})
                       </span>
                     )}
                     {p.id === lobby.hostId && (
@@ -101,13 +103,22 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({
 
             {/* Add Bot */}
             {isHost && lobby.players.length < 4 && (
-              <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-                <span style={{ fontSize: 13, color: '#aaa', alignSelf: 'center' }}>Add Bot:</span>
-                {(['easy', 'medium', 'hard'] as BotDifficulty[]).map((d) => (
-                  <button key={d} onClick={() => onAddBot(d)} style={botBtn}>
-                    {d.charAt(0).toUpperCase() + d.slice(1)}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', gap: 6, marginBottom: 16, alignItems: 'center' }}>
+                <span style={{ fontSize: 13, color: '#aaa' }}>Add Bot:</span>
+                <select
+                  value={selectedDifficulty}
+                  onChange={(e) => setSelectedDifficulty(Number(e.target.value) as BotDifficulty)}
+                  style={selectStyle}
+                >
+                  {([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as BotDifficulty[]).map((d) => (
+                    <option key={d} value={d}>
+                      {d} — {BOT_DIFFICULTY_NAMES[d]}
+                    </option>
+                  ))}
+                </select>
+                <button onClick={() => onAddBot(selectedDifficulty)} style={botBtn}>
+                  Add
+                </button>
               </div>
             )}
 
@@ -235,6 +246,17 @@ const smallBtn: React.CSSProperties = {
   borderRadius: 4,
   fontSize: 12,
   cursor: 'pointer',
+};
+
+const selectStyle: React.CSSProperties = {
+  padding: '4px 8px',
+  background: '#0f3460',
+  color: '#eee',
+  border: '1px solid #88c0d0',
+  borderRadius: 4,
+  fontSize: 12,
+  cursor: 'pointer',
+  outline: 'none',
 };
 
 const botBtn: React.CSSProperties = {

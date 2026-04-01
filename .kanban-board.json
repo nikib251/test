@@ -18,13 +18,16 @@
       "label": "In Progress",
       "cardIds": [
         "reviewer",
-        "context-restorer"
+        "context-restorer",
+        "bot-difficulty"
       ]
     },
     "review": {
       "id": "review",
       "label": "Review",
-      "cardIds": []
+      "cardIds": [
+        "integration-reviewer"
+      ]
     },
     "done": {
       "id": "done",
@@ -34,8 +37,7 @@
         "db-architect",
         "bot-dev",
         "frontend-dev",
-        "backend-dev",
-        "integration-reviewer"
+        "backend-dev"
       ]
     }
   },
@@ -290,7 +292,34 @@
       "role": "Integration Reviewer",
       "skill": "Full-stack TypeScript, Socket.IO, Hearts game logic auditing",
       "systemPrompt": "You are a senior integration reviewer for a multiplayer Hearts card game. Your job is to deeply audit the codebase for bugs, type mismatches, missing event handlers, broken game logic, and integration issues between frontend and backend.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id(\"socket.io\") → pick best match → query-docs(\"/socketio/socket.io\", \"events\")\n\n## What to audit:\n1. **Socket.IO events** — every `emit` on frontend must have a matching `on` handler on backend and vice versa. List ALL mismatches.\n2. **TypeScript types** — shared types between frontend/backend. Any type mismatches, missing fields, wrong field names.\n3. **Game logic** — Hearts rules: noHeartBreak, bloodOnTheMoon, moon shooting, card passing. Look for logical bugs.\n4. **REST API** — all fetch() calls in frontend must match backend routes exactly (method, path, response shape).\n5. **Redis/PostgreSQL** — state management correctness, missing awaits, race conditions.\n6. **Lobby & chat** — what's wired, what's broken, what's missing.\n7. **Bot AI** — check if bot difficulty levels work correctly, any crashes or edge cases.\n\n## How to work:\n- Read ALL source files thoroughly: backend/src/, frontend/src/\n- Use grep/find to trace event names and API calls\n- For each bug found: describe the file, line, issue, and exact fix needed\n- Output a numbered list of ALL issues found, grouped by severity: CRITICAL, MAJOR, MINOR\n- After listing all issues, FIX all of them directly in the files\n- Run `cd backend && npm run build` and `cd frontend && npm run build` to verify fixes compile\n- Commit all fixes with: git add -A && git commit -m 'fix: integration review fixes'\n\n## Constraints:\n- Fix issues directly, don't just report them\n- Make minimal targeted changes — don't refactor working code\n- If a fix requires adding a new small function, do it\n- Do NOT change game rules or UI design",
-      "status": "done",
+      "status": "reviewing",
+      "phase": "review",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 907,
+        "costUsd": 0.013604999999999999
+      },
+      "durationMs": 37825,
+      "outputPreview": "Here's the full report:\n\n---\n\n## Kanban Board Status\n\n### Backlog / Questions (2 cards)\n| Card | Type | Status | Description |\n|------|------|--------|-------------|\n| **Уровни сложности** | user_wish | ready | 10 difficulty levels requested |\n| **Адаптивная верстка** | user_wish | ready | Responsive layout for desktop + iOS/Android browser |\n\n### In Progress (3 cards)\n| Card | Role | Status | Details |\n|------|------|--------|---------|\n| **reviewer** | Integration Reviewer | executing | Started 09:47, no output yet |\n| **context-restorer** | Context Analyzer | executing | Started 09:51, found Redis/PG connection issues, `bloodOnTheMoon` logic bug, `noHeartBreak` naming confusion |\n| **integration-reviewer** | Integration Reviewer | executing | Started 10:13, completed 10:17 — **fixed 7 issues** (3 critical, 3 major, 1 minor) |\n\n### Review (0 cards)\nEmpty.\n\n### Done (5 cards)\n| Card | Role | Duration | Key Output |\n|------|------|----------|------------|\n| **devops** | DevOps Engineer | ~48s | docker-compose, Dockerfiles, nginx, .env.example, start.sh |\n| **db-architect** | Database Architect | ~8min | SQL migrations, Redis key docs |\n| **bot-dev** | AI Bot Developer | ~11min | HeartsBot, BotWeights (adaptive), CardCounter |\n| **frontend-dev** | Frontend Developer | ~13min | React UI — all screens, components, Socket.IO hooks |\n| **backend-dev** | Backend Developer | ~17min | Express + Socket.IO server, game logic, REST API |\n\n---\n\n## Git Log (6 commits total)\n```\nb1f97ee feat: погнали\na388f9a fix: integration review — 7 bugs fixed across bot logic, game flow, UI, and reconnection\n84e8ecb feat: ну постепенно\nf09e8f1 feat: восстанови контекст задачи после перезапуска\n0063ce8 feat: reviewer выполняет работу сейчас?\n38fbd06 Initial commit\n```\n\n---\n\n## Summary\n\n- **Total cost**: $0.73\n- **Phase**: `approved` (but 3 cards still marked `executing` in `in_progress`)\n- The **integration-reviewer** already ran and fixed 7 bugs (commit `a388f9a`): bot noHeartBreak logic, bla",
+      "createdAt": "2026-04-01T10:13:20.016Z",
+      "startedAt": "2026-04-01T10:13:25.583Z",
+      "completedAt": "2026-04-01T10:17:47.882Z",
+      "title": "Интеграционная проверка",
+      "description": "• Аудит всех Socket.IO событий (emit↔on совпадения)\n• Проверка TypeScript типов между frontend и backend\n• Баги в игровой логике (noHeartBreak, bloodOnTheMoon, moon)\n• REST API — соответствие fetch() вызовов и роутов\n• Redis/PostgreSQL — race conditions, missing awaits\n• Чат лобби — что сломано\n• Исправление всех найденных проблем + проверка компиляции",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
+    },
+    "bot-difficulty": {
+      "id": "bot-difficulty",
+      "role": "AI Bot Developer",
+      "skill": "TypeScript, game AI, Hearts card game strategy",
+      "systemPrompt": "You are an expert AI/game developer implementing 10 difficulty levels for a Hearts card game bot.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n\n## Your Task\nExpand the existing bot system from 3 difficulty levels to 10 levels.\n\nFirst, read ALL existing bot files:\n- backend/src/bot/HeartsBot.ts\n- backend/src/bot/BotWeights.ts (if exists)\n- backend/src/bot/CardCounter.ts (if exists)\n- backend/src/types/game.ts\n- Any other files in backend/src/bot/\n\nAlso read backend/src/game/HeartsGame.ts to understand game state.\n\n## 10 Difficulty Levels Design\n\nLevel 1 — Случайный (Random): plays completely random valid card\nLevel 2 — Новичок (Noob): avoids playing Hearts by default, no strategy\nLevel 3 — Любитель (Amateur): avoids Q♠, prefers low cards\nLevel 4 — Казуал (Casual): basic card counting (tracks played cards)\nLevel 5 — Средний (Medium): avoids giving points, tracks high cards\nLevel 6 — Опытный (Experienced): tracks who has what suits, dumps high cards smartly\nLevel 7 — Продвинутый (Advanced): predicts opponents' hands, strategic passing\nLevel 8 — Эксперт (Expert): moon-shooting detection, counter-play\nLevel 9 — Мастер (Master): full probability-based play, adaptive strategy\nLevel 10 — Гроссмейстер (Grandmaster): perfect information play + meta-strategy (when to shoot the moon, when to block)\n\n## Implementation Requirements\n1. Update the BotDifficulty type/enum to support 1-10 (integers) or named levels\n2. Implement a `selectCard(gameState, hand, difficulty)` method that branches by difficulty\n3. Each level MUST be meaningfully different from adjacent levels — not just random % chance\n4. Levels 7-10 should use CardCounter data if available\n5. Keep backward compatibility — existing 'easy'/'medium'/'hard' strings should map to levels 2/5/8 or be replaced consistently everywhere\n6. Update ALL places where difficulty is referenced: game server, lobby, frontend selectors\n\n## Frontend Updates\n- Update the bot difficulty selector in the lobby to show all 10 levels with Russian names\n- The selector should show: level number + name (e.g. \"1 — Случайный\", \"2 — Новичок\", etc.)\n\n## After implementation:\n- Run `cd backend && npm run build` — must succeed with 0 errors\n- Run `cd frontend && npm run build` — must succeed with 0 errors\n- Commit: git add -A && git commit -m 'feat: 10 bot difficulty levels'\n\n## Constraints\n- TypeScript strict mode — no `any` types\n- No breaking changes to Socket.IO event shapes\n- Bot must always return a valid card (never undefined/null)\n- Each difficulty level must have a comment explaining its strategy",
+      "status": "executing",
       "phase": "execute",
       "taskDepth": 0,
       "parentCardId": null,
@@ -299,26 +328,26 @@
       "pendingQuestion": null,
       "tokenUsage": {
         "input": 0,
-        "output": 329,
-        "costUsd": 0.004934999999999999
+        "output": 0,
+        "costUsd": 0
       },
-      "durationMs": 262297,
-      "outputPreview": "All 7 issues have been fixed and committed. Here's a summary:\n\n### Issues Fixed (7 total)\n\n**CRITICAL (3):**\n1. **Bot `noHeartBreak` logic inverted** — Bot was blocking hearts when the rule says they're allowed, and vice versa. Now matches `RulesEngine.getValidCards` behavior.\n2. **Bot first-trick `blackMaria` gap** — Bot didn't filter K♠/A♠ on first trick when `blackMaria` enabled, could choose invalid cards.\n3. **`checkBotTurn` game freeze** — If bot chose an invalid card, `playCard` returned `false` silently and the game hung forever. Now throws to trigger the fallback path.\n\n**MAJOR (3):**\n4. **`bloodOnTheMoon` UI mismatch** — UI said \"doubles moon reward\" but actual behavior is \"+5 penalty if no hearts taken\". Fixed description.\n5. **Bot duplicated types** — Bot imported from local `./types` instead of shared `../types/game`. Now uses the single source of truth.\n6. **Reconnection data loss** — `rejoin_game` didn't update `roundScoresHistory`, `passedCards`, or `pendingPasses` for the new socket ID. Scoreboard would show wrong data after reconnect.\n\n**MINOR (1):**\n7. **Trick card animation glitch** — CSS `transform` in animation overrode positioning transforms, causing cards to appear off-center during animation.\n\nAll changes compile cleanly (backend `tsc` + frontend `tsc && vite build`).\n",
-      "createdAt": "2026-04-01T10:13:20.016Z",
-      "startedAt": "2026-04-01T10:13:25.583Z",
-      "completedAt": "2026-04-01T10:17:47.882Z",
-      "title": "Интеграционная проверка",
-      "description": "• Аудит всех Socket.IO событий (emit↔on совпадения)\n• Проверка TypeScript типов между frontend и backend\n• Баги в игровой логике (noHeartBreak, bloodOnTheMoon, moon)\n• REST API — соответствие fetch() вызовов и роутов\n• Redis/PostgreSQL — race conditions, missing awaits\n• Чат лобби — что сломано\n• Исправление всех найденных проблем + проверка компиляции",
+      "durationMs": 0,
+      "outputPreview": "",
+      "createdAt": "2026-04-01T10:20:48.902Z",
+      "startedAt": "2026-04-01T10:20:55.229Z",
+      "completedAt": null,
+      "title": "10 уровней сложности ботов",
+      "description": "• Уровни 1-10 с уникальной стратегией каждый\n• 1: Случайный, 2: Новичок, 3: Любитель, 4: Казуал, 5: Средний\n• 6: Опытный, 7: Продвинутый, 8: Эксперт, 9: Мастер, 10: Гроссмейстер\n• Обновление селектора сложности в лобби (русские названия)\n• Обратная совместимость с easy/medium/hard\n• Компиляция backend + frontend без ошибок",
       "cardType": "agent_task",
       "createdBy": "orchestrator"
     }
   },
   "orchestratorCost": {
-    "input": 123964,
-    "output": 9178,
-    "costUsd": 0.509562
+    "input": 156516,
+    "output": 11166,
+    "costUsd": 0.637038
   },
-  "totalCostUsd": 0.680247,
+  "totalCostUsd": 0.816393,
   "createdAt": "2026-04-01T09:29:21.678Z",
-  "updatedAt": "2026-04-01T10:17:47.882Z"
+  "updatedAt": "2026-04-01T10:20:55.229Z"
 }

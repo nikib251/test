@@ -8,7 +8,31 @@ export interface Card {
 }
 
 export type PlayerRole = 'human' | 'bot';
-export type BotDifficulty = 'easy' | 'medium' | 'hard';
+export type BotDifficulty = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
+/** Backward-compatible mapping from legacy string values */
+export function parseBotDifficulty(value: string | number): BotDifficulty {
+  if (typeof value === 'number' && value >= 1 && value <= 10) return value as BotDifficulty;
+  switch (value) {
+    case 'easy': return 2;
+    case 'medium': return 5;
+    case 'hard': return 8;
+    default: return 5;
+  }
+}
+
+export const BOT_DIFFICULTY_NAMES: Record<BotDifficulty, string> = {
+  1: 'Случайный',
+  2: 'Новичок',
+  3: 'Любитель',
+  4: 'Казуал',
+  5: 'Средний',
+  6: 'Опытный',
+  7: 'Продвинутый',
+  8: 'Эксперт',
+  9: 'Мастер',
+  10: 'Гроссмейстер',
+};
 export type PassDirection = 'left' | 'right' | 'across' | 'none' | 'random';
 export type GamePhase = 'waiting' | 'passing' | 'playing' | 'round_end' | 'game_end';
 

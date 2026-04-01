@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import { HeartsGame } from '../game/HeartsGame';
-import { BotDifficulty, GameState, TrickCard } from '../types/game';
+import { BotDifficulty, GameState, TrickCard, parseBotDifficulty } from '../types/game';
 import {
   saveGameState,
   getGameState as getRedisGameState,
@@ -156,7 +156,7 @@ export function setupGameSocket(io: Server): void {
       }
     });
 
-    socket.on('add_bot', async (data: { gameId: string; difficulty: BotDifficulty }) => {
+    socket.on('add_bot', async (data: { gameId: string; difficulty: BotDifficulty | string }) => {
       const game = games.get(data.gameId);
       if (!game) {
         socket.emit('error', { code: 'game_not_found', message: 'Game not found' });
@@ -168,7 +168,8 @@ export function setupGameSocket(io: Server): void {
         return;
       }
 
-      const bot = game.addBot(data.difficulty);
+      const difficulty = parseBotDifficulty(data.difficulty);
+      const bot = game.addBot(difficulty);
       if (!bot) {
         socket.emit('error', { code: 'lobby_full', message: 'Lobby is full' });
         return;

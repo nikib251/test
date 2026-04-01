@@ -79,14 +79,9 @@ function pickRandom(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 // ── Situation Hash ─────────────────────────────────────────────────
-// Format: 'v1_' + hex encoding of:
-//   round_phase(2bit) + position_in_trick(2bit) + hand_size_bucket(3bit)
-//   + void_suits(4bit) + hearts_broken(1bit) + lead_suit(3bit)
-// Total: 15 bits -> 4 hex chars
 const SUIT_BITS = { clubs: 0, diamonds: 1, hearts: 2, spades: 3 };
 const LEAD_SUIT_MAP = { clubs: 1, diamonds: 2, hearts: 3, spades: 4, none: 0 };
 function handSizeBucket(size) {
-    // 0-2: 0, 3-5: 1, 6-8: 2, 9-10: 3, 11-13: 4 (fits in 3 bits)
     if (size <= 2)
         return 0;
     if (size <= 5)
@@ -99,7 +94,7 @@ function handSizeBucket(size) {
 }
 function computeSituationHash(gameState, hand) {
     const phase = gameState.phase === 'passing' ? 0 : gameState.phase === 'playing' ? 1 : 2;
-    const posInTrick = Math.min(gameState.currentTrick.length, 3); // 0-3
+    const posInTrick = Math.min(gameState.currentTrick.length, 3);
     const hsBucket = handSizeBucket(hand.length);
     let voidBits = 0;
     for (const suit of ALL_SUITS) {
@@ -111,8 +106,6 @@ function computeSituationHash(gameState, hand) {
     const leadSuit = gameState.currentTrick.length > 0
         ? LEAD_SUIT_MAP[gameState.currentTrick[0].card.suit] ?? 0
         : 0;
-    // Pack into 15 bits:
-    // [14:13] phase, [12:11] position, [10:8] handBucket, [7:4] voidSuits, [3] heartsBroken, [2:0] leadSuit
     const bits = (phase << 13) | (posInTrick << 11) | (hsBucket << 8) | (voidBits << 4) | (hbBit << 3) | leadSuit;
     const hex = bits.toString(16).padStart(4, '0');
     return `v1_${hex}`;
@@ -125,16 +118,13 @@ function getLegalMoves(hand, gameState) {
     // First trick of the round: must lead 2 of clubs
     if (trickNum === 1 && trick.length === 0) {
         const twoClubs = hand.find(c => c.id === '2_clubs');
-        return twoClubs ? [twoClubs] : hand; // fallback if somehow missing
+        return twoClubs ? [twoClubs] : hand;
     }
     if (trick.length === 0) {
-        // Leading a trick
         if (rules.noHeartBreak) {
-            // noHeartBreak = true means hearts can be led anytime (no restriction)
             return hand;
         }
         if (!gameState.heartsBroken) {
-            // Can't lead hearts unless hearts are broken or only hearts in hand
             const nonHearts = hand.filter(c => !isHeart(c));
             return nonHearts.length > 0 ? nonHearts : hand;
         }
@@ -145,9 +135,8 @@ function getLegalMoves(hand, gameState) {
     const suitCards = cardsOfSuit(hand, leadSuit);
     if (suitCards.length > 0)
         return suitCards;
-    // Void in lead suit: can play anything except...
+    // Void in lead suit: can play anything except on first trick...
     if (trickNum === 1) {
-        // First trick: no point cards (hearts, QoS, and blackMaria K♠/A♠ if enabled)
         const safe = hand.filter(c => !isHeart(c) && !isQoS(c) &&
             !(rules.blackMaria && c.suit === 'spades' && (c.rank === 'K' || c.rank === 'A')));
         if (safe.length > 0)
@@ -156,20 +145,21 @@ function getLegalMoves(hand, gameState) {
     return hand;
 }
 // ── Moon Shot Detection ────────────────────────────────────────────
+function countPenaltyCards(tricks) {
+    let count = 0;
+    for (const trick of tricks) {
+        for (const card of trick) {
+            if (isHeart(card) || isQoS(card))
+                count++;
+        }
+    }
+    return count;
+}
 function detectMoonShooter(gameState, myId) {
-    // Someone is shooting if they've taken almost all penalty cards
-    const totalPenaltyCards = 14; // 13 hearts + QoS
     for (const player of gameState.players) {
         if (player.id === myId)
             continue;
-        let penaltyCount = 0;
-        for (const trick of player.tricksTaken) {
-            for (const card of trick) {
-                if (isHeart(card) || isQoS(card))
-                    penaltyCount++;
-            }
-        }
-        // If they have 8+ penalty cards by trick 10, they might be shooting
+        const penaltyCount = countPenaltyCards(player.tricksTaken);
         if (penaltyCount >= 8 && gameState.trickNumber >= 8) {
             return player.id;
         }
@@ -180,70 +170,149 @@ function amIShootingTheMoon(gameState, myId) {
     const me = gameState.players.find(p => p.id === myId);
     if (!me)
         return false;
-    let myPenalty = 0;
-    for (const trick of me.tricksTaken) {
-        for (const card of trick) {
-            if (isHeart(card) || isQoS(card))
-                myPenalty++;
+    return countPenaltyCards(me.tricksTaken) >= 10;
+}
+// ── Suit Void Tracking (Level 6+) ─────────────────────────────────
+/** Track which suits each opponent is void in based on observed plays */
+function inferVoidSuits(gameState, myId) {
+    const voids = new Map();
+    for (const p of gameState.players) {
+        if (p.id !== myId)
+            voids.set(p.id, new Set());
+    }
+    // Look at all completed tricks to find instances where a player didn't follow suit
+    for (const player of gameState.players) {
+        for (const trick of player.tricksTaken) {
+            // We can't reconstruct who played what from tricksTaken alone,
+            // so we rely on current trick observation below
         }
     }
-    // Commit to shooting if we have 10+ penalty cards
-    return myPenalty >= 10;
+    // Current trick: if someone played off-suit, they're void in the lead suit
+    if (gameState.currentTrick.length >= 2) {
+        const leadSuit = gameState.currentTrick[0].card.suit;
+        for (let i = 1; i < gameState.currentTrick.length; i++) {
+            const tc = gameState.currentTrick[i];
+            if (tc.card.suit !== leadSuit && tc.playerId !== myId) {
+                voids.get(tc.playerId)?.add(leadSuit);
+            }
+        }
+    }
+    return voids;
 }
-// ── Heuristic Scoring ──────────────────────────────────────────────
-function scoreCardHeuristic(card, legalMoves, hand, gameState, playerId, counter) {
+// ── Probability Estimation (Level 9+) ─────────────────────────────
+/** Estimate the probability that a specific opponent holds a given card */
+function estimateCardProbability(cardId, suit, counter, opponentVoids, gameState, myId) {
+    if (counter.hasBeenPlayed(cardId))
+        return 0;
+    const remaining = counter.getRemainingCards(suit);
+    const opponents = gameState.players.filter(p => p.id !== myId);
+    const nonVoidOpponents = opponents.filter(p => !opponentVoids.get(p.id)?.has(suit));
+    if (nonVoidOpponents.length === 0)
+        return 0;
+    // Simplified: probability any opponent has it
+    return remaining > 0 ? Math.min(1, nonVoidOpponents.length / remaining) : 0;
+}
+// ── Pass Heuristics ────────────────────────────────────────────────
+function scorePassCard(card, hand, rules, level) {
+    let score = 0;
+    // Always pass QoS (level 3+)
+    if (isQoS(card))
+        return 100;
+    // Pass high spades (danger of catching QoS)
+    if (card.suit === 'spades') {
+        if (card.rank === 'A')
+            score += 90;
+        if (card.rank === 'K')
+            score += 85;
+        if (rules.blackMaria) {
+            if (card.rank === 'A')
+                score += 10;
+            if (card.rank === 'K')
+                score += 10;
+        }
+    }
+    // Pass high hearts
+    if (isHeart(card)) {
+        score += 30 + rankVal(card) * 3;
+    }
+    // Pass high cards in general
+    score += rankVal(card) * 2;
+    // Keep JoD if enabled (level 4+)
+    if (level >= 4 && rules.jackOfDiamonds && card.suit === 'diamonds' && card.rank === 'J') {
+        score -= 50;
+    }
+    // Prefer to void a suit: pass all cards of a short suit (level 5+)
+    if (level >= 5) {
+        const suitCount = cardsOfSuit(hand, card.suit).length;
+        if (suitCount <= 3 && card.suit !== 'hearts') {
+            score += 15;
+        }
+    }
+    // Level 7+: consider keeping low spades as QoS bait
+    if (level >= 7 && card.suit === 'spades' && rankVal(card) < RANK_VALUE['J']) {
+        score -= 10; // prefer keeping low spades to duck under QoS
+    }
+    return score;
+}
+// ── Heuristic Scoring by Level ─────────────────────────────────────
+function scoreCardForLevel(card, legalMoves, hand, gameState, playerId, counter, level) {
     const trick = gameState.currentTrick;
     const rules = gameState.rules;
     let score = 0;
-    const iAmShooting = amIShootingTheMoon(gameState, playerId);
-    const moonShooter = detectMoonShooter(gameState, playerId);
-    // ── Moon shooting mode ──
-    if (iAmShooting) {
-        // Want to WIN tricks and collect all penalty cards
-        score += rankVal(card) * 3; // prefer high cards
-        if (isHeart(card) || isQoS(card))
-            score += 10;
-        // If leading, lead high
-        if (trick.length === 0)
-            score += rankVal(card) * 2;
-        return score;
-    }
-    // ── Blocking a moon shooter ──
-    if (moonShooter && trick.length > 0) {
-        // Try to win a trick with a penalty card to break the shoot
-        const leadSuit = trick[0].card.suit;
-        if (card.suit === leadSuit) {
-            // If the moon shooter led, try to take the trick with a non-penalty card
-            const highestInTrick = Math.max(...trick.map(tc => rankVal(tc.card)));
-            if (rankVal(card) > highestInTrick && !isHeart(card) && !isQoS(card)) {
-                score += 15; // win the trick to grab a heart away from shooter
-            }
+    // ── Moon shooting logic (level 8+) ──
+    if (level >= 8) {
+        const iAmShooting = amIShootingTheMoon(gameState, playerId);
+        const moonShooter = detectMoonShooter(gameState, playerId);
+        if (iAmShooting) {
+            // Want to WIN tricks and collect all penalty cards
+            score += rankVal(card) * 3;
+            if (isHeart(card) || isQoS(card))
+                score += 10;
+            if (trick.length === 0)
+                score += rankVal(card) * 2;
+            return score;
         }
-        if (isHeart(card) && card.suit !== (trick[0]?.card.suit)) {
-            // Dump a heart on the trick the shooter might not win
-            score += 5;
+        if (moonShooter && trick.length > 0) {
+            const leadSuit = trick[0].card.suit;
+            if (card.suit === leadSuit) {
+                const highestInTrick = Math.max(...trick.map(tc => rankVal(tc.card)));
+                if (rankVal(card) > highestInTrick && !isHeart(card) && !isQoS(card)) {
+                    score += 15; // win the trick to steal a heart from shooter
+                }
+            }
+            if (isHeart(card) && card.suit !== trick[0]?.card.suit) {
+                score += 5; // dump heart on trick shooter might not win
+            }
         }
     }
     // ── Leading ──
     if (trick.length === 0) {
-        // Lead low in safe suits
         if (!isHeart(card) && !isQoS(card)) {
-            score += 8 - rankVal(card); // lower = higher score
+            score += 8 - rankVal(card); // lower = safer lead
         }
-        // Avoid leading spades if we don't have QoS protection
-        if (card.suit === 'spades') {
+        // Level 5+: avoid leading spades when QoS is lurking
+        if (level >= 5 && card.suit === 'spades') {
             const hasQueen = hand.some(c => isQoS(c));
             if (hasQueen && rankVal(card) < RANK_VALUE['Q']) {
-                score += 5; // lead low spade to flush out higher spades
+                score += 5; // flush out higher spades
             }
             else {
                 score -= 3;
             }
         }
-        // Lead a suit where we have few cards (can void later)
-        const suitCount = cardsOfSuit(hand, card.suit).length;
-        if (suitCount <= 2)
-            score += 3;
+        // Level 6+: lead suits where we have few cards to void faster
+        if (level >= 6) {
+            const suitCount = cardsOfSuit(hand, card.suit).length;
+            if (suitCount <= 2)
+                score += 3;
+        }
+        // Level 9+: lead suits where opponents are strong (force them to take tricks)
+        if (level >= 9) {
+            const remaining = counter.getRemainingCards(card.suit);
+            if (remaining >= 8 && rankVal(card) <= 3) {
+                score += 4; // safe low lead in a heavy suit
+            }
+        }
         return score;
     }
     // ── Following ──
@@ -262,8 +331,14 @@ function scoreCardHeuristic(card, legalMoves, hand, gameState, playerId, counter
                 score -= 15; // avoid winning penalty cards
             }
             else if (trick.length === 3) {
-                // Last to play, no penalty in trick: safe to win
+                // Last to play, no penalty: safe to win
                 score += 5;
+                // Level 7+: extra bonus if trick is truly clean
+                if (level >= 7) {
+                    const totalPenaltyInTrick = trick.reduce((s, tc) => s + penaltyPoints(tc.card, rules), 0);
+                    if (totalPenaltyInTrick === 0)
+                        score += 3;
+                }
             }
             else {
                 score -= 3; // early position, risky
@@ -273,71 +348,66 @@ function scoreCardHeuristic(card, legalMoves, hand, gameState, playerId, counter
     else {
         // Void in lead suit: dump dangerous cards
         if (isQoS(card)) {
-            score += 25; // dump QoS immediately
+            score += 25;
         }
         if (isHeart(card)) {
             score += 10 + rankVal(card); // dump high hearts first
         }
         if (rules.blackMaria && card.suit === 'spades' && (card.rank === 'K' || card.rank === 'A')) {
-            score += 20; // dump black maria cards
+            score += 20;
         }
-        // JoD bonus: try to keep it if rules enable it
-        if (rules.jackOfDiamonds && card.suit === 'diamonds' && card.rank === 'J') {
-            score -= 15; // keep JoD, it's worth -10 points
+        // JoD bonus: keep it if rules enable it (level 4+)
+        if (level >= 4 && rules.jackOfDiamonds && card.suit === 'diamonds' && card.rank === 'J') {
+            score -= 15;
         }
-        // Otherwise dump high cards to reduce future danger
+        // Dump high cards to reduce future danger
         if (!isHeart(card) && !isQoS(card)) {
             score += rankVal(card) * 0.5;
         }
     }
-    // ── Card counting adjustments ──
-    const remainingInSuit = counter.getRemainingCards(card.suit);
-    if (card.suit === 'spades' && !counter.hasBeenPlayed('Q_spades')) {
-        // QoS is still out there
-        if (card.suit === 'spades' && rankVal(card) > RANK_VALUE['Q']) {
-            score -= 5; // danger of eating QoS
+    // ── Card counting adjustments (level 4+) ──
+    if (level >= 4) {
+        if (card.suit === 'spades' && !counter.hasBeenPlayed('Q_spades')) {
+            if (rankVal(card) > RANK_VALUE['Q']) {
+                score -= 5; // danger of eating QoS
+            }
+        }
+        const remainingInSuit = counter.getRemainingCards(card.suit);
+        if (remainingInSuit <= 3 && card.suit !== 'hearts') {
+            score += 2;
         }
     }
-    // If very few cards remain in a suit, high cards are safer
-    if (remainingInSuit <= 3 && card.suit !== 'hearts') {
-        score += 2;
-    }
-    return score;
-}
-// ── Pass Heuristics ────────────────────────────────────────────────
-function scorePassCard(card, hand, rules) {
-    let score = 0;
-    // Always pass QoS
-    if (isQoS(card))
-        return 100;
-    // Pass high spades (danger of catching QoS)
-    if (card.suit === 'spades') {
-        if (card.rank === 'A')
-            score += 90;
-        if (card.rank === 'K')
-            score += 85;
-        if (rules.blackMaria) {
-            // Even more dangerous in blackMaria
-            if (card.rank === 'A')
-                score += 10;
-            if (card.rank === 'K')
-                score += 10;
+    // ── Void-tracking adjustments (level 6+) ──
+    if (level >= 6 && trick.length === 0) {
+        const voids = inferVoidSuits(gameState, playerId);
+        // Avoid leading a suit where an opponent is void (they'll dump hearts/QoS on us)
+        for (const [, voidSet] of voids) {
+            if (voidSet.has(card.suit)) {
+                score -= 6;
+                break;
+            }
         }
     }
-    // Pass high hearts
-    if (isHeart(card)) {
-        score += 30 + rankVal(card) * 3;
+    // ── Probability-based adjustments (level 9+) ──
+    if (level >= 9 && card.suit === 'spades' && !counter.hasBeenPlayed('Q_spades')) {
+        const voids = inferVoidSuits(gameState, playerId);
+        const qProb = estimateCardProbability('Q_spades', 'spades', counter, voids, gameState, playerId);
+        if (rankVal(card) > RANK_VALUE['Q']) {
+            score -= Math.round(qProb * 10); // scale penalty by probability QoS is out there
+        }
     }
-    // Pass high cards in general
-    score += rankVal(card) * 2;
-    // Keep JoD if enabled
-    if (rules.jackOfDiamonds && card.suit === 'diamonds' && card.rank === 'J') {
-        score -= 50;
-    }
-    // Prefer to void a suit: pass all cards of a short suit
-    const suitCount = cardsOfSuit(hand, card.suit).length;
-    if (suitCount <= 3 && card.suit !== 'hearts') {
-        score += 15;
+    // ── Meta-strategy: shoot the moon consideration (level 10) ──
+    if (level >= 10 && trick.length === 0) {
+        const me = gameState.players.find(p => p.id === playerId);
+        if (me) {
+            const myPenalty = countPenaltyCards(me.tricksTaken);
+            // If we have 6+ penalty cards early, consider committing to moon shot
+            if (myPenalty >= 6 && gameState.trickNumber <= 9) {
+                score += rankVal(card) * 2; // prefer high cards to keep winning
+                if (isHeart(card))
+                    score += 8;
+            }
+        }
     }
     return score;
 }
@@ -360,10 +430,33 @@ function softmaxSelect(scores, temperature = 1.0) {
     }
     return entries[entries.length - 1][0];
 }
+/** Pick the card with the highest score deterministically */
+function pickBest(scores) {
+    let best = null;
+    let bestScore = -Infinity;
+    for (const [card, s] of scores) {
+        if (s > bestScore) {
+            bestScore = s;
+            best = card;
+        }
+    }
+    return best;
+}
+// ── Temperature per level (lower = more deterministic) ─────────────
+function temperatureForLevel(level) {
+    // Level 1-2: high randomness, level 9-10: nearly deterministic
+    const temps = {
+        1: 100, 2: 8, 3: 5, 4: 3.5, 5: 2.5,
+        6: 2.0, 7: 1.5, 8: 1.0, 9: 0.5, 10: 0.3,
+    };
+    return temps[level];
+}
 // ── Main Bot Class ─────────────────────────────────────────────────
 class HeartsBot {
     constructor(nickname, difficulty) {
         this.lastTrickCount = 0;
+        // Track opponent void suits across tricks in a round (level 6+)
+        this.opponentVoids = new Map();
         // Track which cards we played in which situations (for weight updates)
         this.roundPlays = [];
         this.nickname = nickname;
@@ -372,23 +465,48 @@ class HeartsBot {
     }
     async choosePass(hand, rules) {
         await randomDelay();
-        if (this.difficulty === 'easy') {
-            // Random 3 cards
+        // Level 1: completely random pass
+        if (this.difficulty === 1) {
             const shuffled = [...hand].sort(() => Math.random() - 0.5);
             return shuffled.slice(0, 3);
         }
-        // Medium + Hard: heuristic pass
+        // Level 2: random but never pass low cards (keeps low, passes high randomly)
+        if (this.difficulty === 2) {
+            const sorted = [...hand].sort((a, b) => rankVal(b) - rankVal(a));
+            // Pass 3 highest cards (simple noob heuristic)
+            return sorted.slice(0, 3);
+        }
+        // Level 3+: heuristic pass with increasing sophistication
         const scored = hand.map(card => ({
             card,
-            score: scorePassCard(card, hand, rules),
+            score: scorePassCard(card, hand, rules, this.difficulty),
         }));
         scored.sort((a, b) => b.score - a.score);
+        // Level 10: consider whether hand is good enough to attempt moon shot
+        if (this.difficulty >= 10) {
+            const highCards = hand.filter(c => rankVal(c) >= RANK_VALUE['Q']);
+            const hearts = hand.filter(c => isHeart(c));
+            // If we have lots of high cards and hearts, consider keeping them for moon shot
+            if (highCards.length >= 5 && hearts.length >= 4) {
+                // Pass low cards instead to commit to moon shot
+                const lowScored = hand.map(card => ({
+                    card,
+                    score: -rankVal(card) + (isHeart(card) ? -10 : 0) + (isQoS(card) ? -20 : 0),
+                }));
+                lowScored.sort((a, b) => b.score - a.score);
+                return lowScored.slice(0, 3).map(s => s.card);
+            }
+        }
         return scored.slice(0, 3).map(s => s.card);
     }
     async chooseCard(gameState, playerId) {
         await randomDelay();
         // Update card counter from any new trick cards we haven't tracked
         this.syncCardCounter(gameState);
+        // Update opponent void tracking (level 6+)
+        if (this.difficulty >= 6) {
+            this.updateOpponentVoids(gameState, playerId);
+        }
         const me = gameState.players.find(p => p.id === playerId);
         if (!me || me.hand.length === 0) {
             throw new Error('Bot has no cards to play');
@@ -397,31 +515,59 @@ class HeartsBot {
         const legalMoves = getLegalMoves(hand, gameState);
         if (legalMoves.length === 1)
             return legalMoves[0];
-        // Easy: random
-        if (this.difficulty === 'easy') {
+        // Level 1 — Случайный: plays completely random valid card
+        if (this.difficulty === 1) {
             return pickRandom(legalMoves);
         }
-        // Compute heuristic scores
+        // Level 2 — Новичок: avoids playing hearts if possible, otherwise random
+        if (this.difficulty === 2) {
+            const nonHearts = legalMoves.filter(c => !isHeart(c));
+            if (nonHearts.length > 0)
+                return pickRandom(nonHearts);
+            return pickRandom(legalMoves);
+        }
+        // Level 3 — Любитель: avoids Q♠, prefers low cards, avoids hearts
+        if (this.difficulty === 3) {
+            // Sort by: avoid QoS first, then prefer low cards, avoid hearts
+            const scored = new Map();
+            for (const card of legalMoves) {
+                let s = 0;
+                if (isQoS(card))
+                    s -= 20;
+                if (isHeart(card))
+                    s -= 5;
+                s -= rankVal(card); // prefer low cards
+                scored.set(card, s);
+            }
+            return softmaxSelect(scored, temperatureForLevel(3));
+        }
+        // Level 4-10: use heuristic scoring with increasing sophistication
         const hScores = new Map();
         for (const card of legalMoves) {
-            hScores.set(card, scoreCardHeuristic(card, legalMoves, hand, gameState, playerId, this.counter));
+            hScores.set(card, scoreCardForLevel(card, legalMoves, hand, gameState, playerId, this.counter, this.difficulty));
         }
-        // Medium: pure heuristics with softmax
-        if (this.difficulty === 'medium') {
-            return softmaxSelect(hScores, 1.5);
+        // Level 4 — Казуал: basic card counting, moderate randomness
+        // Level 5 — Средний: avoids giving points, tracks high cards
+        // (Both use heuristic scores with softmax at their temperature)
+        if (this.difficulty <= 6) {
+            return softmaxSelect(hScores, temperatureForLevel(this.difficulty));
         }
-        // Hard: heuristics * adaptive weights
+        // Level 7+ — use adaptive weights from DB combined with heuristics
         const situationHash = computeSituationHash(gameState, hand);
         const codes = legalMoves.map(c => cardCode(c));
-        const weights = await BotWeights.getWeights(situationHash, codes, this.difficulty);
+        const weights = await BotWeights.getWeights(situationHash, codes, String(this.difficulty));
         const combinedScores = new Map();
         for (const card of legalMoves) {
             const h = hScores.get(card) ?? 0;
             const w = weights.get(cardCode(card)) ?? 0.5;
-            combinedScores.set(card, h * w);
+            // Higher levels weight the learned data more heavily
+            const weightInfluence = this.difficulty >= 9 ? 1.5 : 1.0;
+            combinedScores.set(card, h * (w * weightInfluence));
         }
-        const chosen = softmaxSelect(combinedScores, 1.0);
         // Record for later weight update
+        const chosen = this.difficulty >= 10
+            ? pickBest(combinedScores) // Level 10: deterministic best play
+            : softmaxSelect(combinedScores, temperatureForLevel(this.difficulty));
         this.roundPlays.push({
             situationHash,
             cardCode: cardCode(chosen),
@@ -429,29 +575,29 @@ class HeartsBot {
         return chosen;
     }
     async onRoundComplete(roundScores, playerId) {
-        // Reset card counter for next round
+        // Reset card counter and void tracking for next round
         this.counter.reset();
         this.lastTrickCount = 0;
-        // Only hard bots update weights
-        if (this.difficulty !== 'hard' || this.roundPlays.length === 0) {
+        this.opponentVoids.clear();
+        // Only level 7+ bots update weights
+        if (this.difficulty < 7 || this.roundPlays.length === 0) {
             this.roundPlays = [];
             return;
         }
         const myScore = roundScores[playerId] ?? 0;
-        // Update weights for all plays this round
-        const updates = this.roundPlays.map(play => BotWeights.updateWeight(play.situationHash, play.cardCode, this.difficulty, myScore));
+        const updates = this.roundPlays.map(play => BotWeights.updateWeight(play.situationHash, play.cardCode, String(this.difficulty), myScore));
         await Promise.all(updates);
         this.roundPlays = [];
     }
     syncCardCounter(gameState) {
-        // Count total tricks played across all players
+        // Only level 4+ bots use card counting
+        if (this.difficulty < 4)
+            return;
         let totalTricks = 0;
         for (const player of gameState.players) {
             totalTricks += player.tricksTaken.length;
         }
-        // If new tricks since last sync, record all cards from new tricks
         if (totalTricks > this.lastTrickCount) {
-            // Reset and rebuild from all tricks (simpler and correct)
             this.counter.reset();
             for (const player of gameState.players) {
                 for (const trick of player.tricksTaken) {
@@ -460,18 +606,30 @@ class HeartsBot {
                     }
                 }
             }
-            // Also record cards in the current trick
             for (const tc of gameState.currentTrick) {
                 this.counter.recordPlay(tc.card);
             }
             this.lastTrickCount = totalTricks;
         }
         else {
-            // Just add current trick cards
             for (const tc of gameState.currentTrick) {
                 if (!this.counter.hasBeenPlayed(tc.card.id)) {
                     this.counter.recordPlay(tc.card);
                 }
+            }
+        }
+    }
+    updateOpponentVoids(gameState, myId) {
+        if (gameState.currentTrick.length < 2)
+            return;
+        const leadSuit = gameState.currentTrick[0].card.suit;
+        for (let i = 1; i < gameState.currentTrick.length; i++) {
+            const tc = gameState.currentTrick[i];
+            if (tc.card.suit !== leadSuit && tc.playerId !== myId) {
+                if (!this.opponentVoids.has(tc.playerId)) {
+                    this.opponentVoids.set(tc.playerId, new Set());
+                }
+                this.opponentVoids.get(tc.playerId).add(leadSuit);
             }
         }
     }
