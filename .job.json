@@ -1,8 +1,8 @@
 {
-  "id": "1d01076c-d354-4961-b3c5-af1eb504924a",
+  "id": "3f1fa131-af86-4111-8835-9b591230a649",
   "userId": 156471140,
   "projectName": "testdurak",
-  "task": "восстанови контекст задачи после перезапуска",
+  "task": "ну постепенно",
   "status": "done",
   "phase": "plan",
   "pendingQuestions": [],
@@ -17,9 +17,9 @@
     "realtime": 0,
     "batch": 0
   },
-  "createdAt": "2026-04-01T10:09:30.118Z",
-  "updatedAt": "2026-04-01T10:11:28.076Z",
-  "startedAt": "2026-04-01T10:09:30.119Z",
-  "completedAt": "2026-04-01T10:11:28.076Z",
+  "createdAt": "2026-04-01T10:12:19.909Z",
+  "updatedAt": "2026-04-01T10:12:23.927Z",
+  "startedAt": "2026-04-01T10:12:19.909Z",
+  "completedAt": "2026-04-01T10:12:23.927Z",
   "errorLog": []
 }
