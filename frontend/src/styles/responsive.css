@@ -5,22 +5,19 @@
 
 /* --- CSS Custom Properties --- */
 :root {
-  /* Card sizes */
+  /* Card sizes — fluid scaling */
   --card-w: clamp(40px, 8vmin, 70px);
   --card-h: clamp(60px, 12vmin, 100px);
-  --card-w-sm: clamp(32px, 6vmin, 50px);
-  --card-h-sm: clamp(48px, 9vmin, 75px);
+  --card-w-sm: clamp(30px, 6vmin, 50px);
+  --card-h-sm: clamp(45px, 9vmin, 75px);
   --card-font: clamp(10px, 2vmin, 16px);
   --card-font-sm: clamp(8px, 1.5vmin, 12px);
   --card-suit: clamp(14px, 3vmin, 26px);
-  --card-suit-sm: clamp(11px, 2.2vmin, 18px);
+  --card-suit-sm: clamp(10px, 2.2vmin, 18px);
   --card-rank: clamp(10px, 2vmin, 18px);
-  --card-rank-sm: clamp(9px, 1.6vmin, 14px);
+  --card-rank-sm: clamp(8px, 1.6vmin, 14px);
   --card-radius: clamp(4px, 1vmin, 8px);
-  --card-gap: clamp(1px, 0.4vmin, 4px);
-
-  /* Table */
-  --table-height: clamp(200px, 45vmin, 400px);
+  --card-overlap: clamp(-22px, -4vmin, -8px); /* negative margin for hand overlap */
 
   /* Spacing */
   --page-pad: 8px;
@@ -35,21 +32,27 @@
   --fs-xl: clamp(22px, 5vmin, 48px);
 
   /* Scoreboard */
-  --score-width: 0px; /* hidden on mobile by default */
+  --score-width: 0px;
 
   /* Touch */
   --min-touch: 44px;
 }
 
 /* --- Global Resets & iOS/Android Fixes --- */
-html, body {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   touch-action: manipulation;
 }
 
@@ -60,18 +63,23 @@ html, body {
 
 #root {
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
 /* Safe area support */
 .app-root {
-  min-height: 100vh;
-  min-height: 100dvh;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Prevent iOS input zoom — keep font-size >= 16px */
@@ -139,9 +147,11 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
+  width: 100%;
+  height: 100%;
   padding: var(--page-pad);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .home-card {
@@ -225,6 +235,7 @@ input, select, textarea {
 }
 .home-join-row .home-input {
   flex: 1;
+  min-width: 0;
 }
 .home-join-row .home-btn-primary {
   flex: 0 0 auto;
@@ -239,8 +250,8 @@ input, select, textarea {
   display: flex;
   justify-content: center;
   padding: var(--page-pad);
-  min-height: 100vh;
-  min-height: 100dvh;
+  width: 100%;
+  height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -252,6 +263,8 @@ input, select, textarea {
   width: 100%;
   max-width: 800px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  margin-bottom: 16px;
+  align-self: flex-start;
 }
 
 .lobby-header {
@@ -280,7 +293,7 @@ input, select, textarea {
 .lobby-code-value {
   font-size: clamp(14px, 3vmin, 20px);
   font-weight: bold;
-  letter-spacing: 2;
+  letter-spacing: 2px;
   color: #ffd600;
   word-break: break-all;
 }
@@ -342,6 +355,7 @@ input, select, textarea {
 
 .lobby-chat-input-row input {
   flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   background: #0f3460;
   border: 1px solid #333;
@@ -476,10 +490,10 @@ input, select, textarea {
 .game-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  width: 100%;
+  height: 100%;
   padding: 4px;
-  gap: 4px;
+  gap: 2px;
   overflow: hidden;
 }
 
@@ -487,11 +501,11 @@ input, select, textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 8px;
+  padding: 2px 8px;
   background: rgba(0,0,0,0.3);
   border-radius: 6px;
   font-size: var(--fs-xs);
-  min-height: 28px;
+  min-height: 24px;
   flex-shrink: 0;
 }
 
@@ -517,12 +531,16 @@ input, select, textarea {
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  gap: 4px;
+  gap: 2px;
+  min-height: 0;
 }
 
 .game-table-wrapper {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 /* Score toggle button - mobile only */
@@ -539,7 +557,7 @@ input, select, textarea {
   padding: 4px 10px;
   font-size: var(--fs-xs);
   cursor: pointer;
-  min-height: 32px;
+  min-height: 28px;
   align-items: center;
 }
 
@@ -563,6 +581,19 @@ input, select, textarea {
   box-shadow: -4px 0 20px rgba(0,0,0,0.5);
 }
 
+/* Score panel backdrop */
+.game-score-backdrop {
+  display: none;
+}
+
+.game-score-backdrop.visible {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 35;
+}
+
 .game-score-panel .score-close {
   position: absolute;
   top: 8px;
@@ -582,7 +613,7 @@ input, select, textarea {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 4px 8px;
   background: rgba(0,0,0,0.3);
   border-radius: 6px;
   flex-wrap: wrap;
@@ -591,7 +622,7 @@ input, select, textarea {
 }
 
 .game-pass-btn {
-  padding: 8px 16px;
+  padding: 6px 14px;
   background: #e53e3e;
   color: #fff;
   border: none;
@@ -599,15 +630,14 @@ input, select, textarea {
   font-size: var(--fs-sm);
   font-weight: bold;
   cursor: pointer;
-  min-height: 36px;
+  min-height: 34px;
 }
 
 /* Player hand */
 .player-hand {
   display: flex;
   justify-content: center;
-  gap: var(--card-gap);
-  padding: 4px 8px;
+  padding: 2px 4px;
   flex-wrap: nowrap;
   max-width: 100%;
   overflow-x: auto;
@@ -617,16 +647,26 @@ input, select, textarea {
 }
 .player-hand::-webkit-scrollbar { display: none; }
 
+/* Card overlap in hand — mobile cards overlap so they fit */
+.player-hand .card {
+  margin-left: var(--card-overlap);
+}
+.player-hand .card:first-child {
+  margin-left: 0;
+}
+
 /* ============================================================
    GAME TABLE
    ============================================================ */
 .game-table {
   position: relative;
   width: 100%;
-  height: var(--table-height);
+  height: 100%;
+  min-height: 0;
+  flex: 1;
   background: radial-gradient(ellipse at center, #0a7e2a, #076324, #054d1b);
-  border-radius: clamp(10px, 2vmin, 20px);
-  border: clamp(3px, 0.6vmin, 6px) solid #3e2723;
+  border-radius: clamp(8px, 2vmin, 20px);
+  border: clamp(2px, 0.5vmin, 6px) solid #3e2723;
   box-shadow: inset 0 0 50px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.5);
   overflow: hidden;
 }
@@ -640,6 +680,7 @@ input, select, textarea {
   background: rgba(0,0,0,0.4);
   padding: 2px 6px;
   border-radius: 4px;
+  z-index: 4;
 }
 
 /* Player info badges on table */
@@ -651,8 +692,8 @@ input, select, textarea {
 
 .table-player-badge {
   border-radius: 6px;
-  padding: 4px 8px;
-  min-width: clamp(60px, 12vmin, 100px);
+  padding: 2px 6px;
+  min-width: clamp(55px, 12vmin, 100px);
   transition: all 0.3s ease;
 }
 
@@ -663,11 +704,11 @@ input, select, textarea {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: clamp(60px, 14vmin, 120px);
+  max-width: clamp(55px, 14vmin, 120px);
 }
 
 .table-player-badge .player-stats {
-  font-size: clamp(8px, 1.2vmin, 12px);
+  font-size: clamp(7px, 1.1vmin, 12px);
   color: #ccc;
   white-space: nowrap;
 }
@@ -684,16 +725,17 @@ input, select, textarea {
   to { opacity: 1; }
 }
 
-/* Position overrides — bottom */
-.table-player-info.pos-bottom { bottom: 4px; left: 50%; transform: translateX(-50%); }
-.table-player-info.pos-top { top: 4px; left: 50%; transform: translateX(-50%); }
-.table-player-info.pos-left { left: 4px; top: 50%; transform: translateY(-50%); }
-.table-player-info.pos-right { right: 4px; top: 50%; transform: translateY(-50%); }
+/* Position overrides */
+.table-player-info.pos-bottom { bottom: 2px; left: 50%; transform: translateX(-50%); }
+.table-player-info.pos-top { top: 2px; left: 50%; transform: translateX(-50%); }
+.table-player-info.pos-left { left: 2px; top: 50%; transform: translateY(-50%); }
+.table-player-info.pos-right { right: 2px; top: 50%; transform: translateY(-50%); }
 
-.table-trick-card.pos-bottom { bottom: 30%; left: 50%; transform: translateX(-50%); }
-.table-trick-card.pos-top { top: 30%; left: 50%; transform: translateX(-50%); }
-.table-trick-card.pos-left { left: 30%; top: 50%; transform: translateY(-50%); }
-.table-trick-card.pos-right { right: 30%; top: 50%; transform: translateY(-50%); }
+/* Trick cards closer to center on mobile */
+.table-trick-card.pos-bottom { bottom: 28%; left: 50%; transform: translateX(-50%); }
+.table-trick-card.pos-top { top: 18%; left: 50%; transform: translateX(-50%); }
+.table-trick-card.pos-left { left: 25%; top: 50%; transform: translateY(-50%); }
+.table-trick-card.pos-right { right: 25%; top: 50%; transform: translateY(-50%); }
 
 /* ============================================================
    CARDS
@@ -708,7 +750,7 @@ input, select, textarea {
   justify-content: center;
   gap: 1px;
   font-weight: bold;
-  transition: all 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   user-select: none;
   flex-shrink: 0;
   position: relative;
@@ -846,9 +888,11 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
+  width: 100%;
+  height: 100%;
   padding: var(--page-pad);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .results-panel {
@@ -948,9 +992,11 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
+  width: 100%;
+  height: 100%;
   padding: var(--page-pad);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .leaderboard-panel {
@@ -1056,23 +1102,32 @@ input, select, textarea {
 }
 
 /* ============================================================
+   LARGE MOBILE BREAKPOINT (480px+)
+   ============================================================ */
+@media (min-width: 480px) {
+  :root {
+    --card-overlap: clamp(-18px, -3vmin, -4px);
+  }
+}
+
+/* ============================================================
    TABLET BREAKPOINT (768px+)
    ============================================================ */
 @media (min-width: 768px) {
   :root {
     --page-pad: 12px;
     --panel-pad: 24px;
-    --table-height: clamp(280px, 45vmin, 400px);
-    --card-gap: clamp(2px, 0.5vmin, 4px);
+    --card-overlap: clamp(-12px, -2vmin, -2px);
   }
 
   .game-container {
     padding: 8px;
-    gap: 6px;
+    gap: 4px;
   }
 
   .game-top-bar {
-    padding: 6px 12px;
+    padding: 4px 12px;
+    min-height: 28px;
   }
 
   .lobby-content {
@@ -1102,6 +1157,21 @@ input, select, textarea {
     max-width: 450px;
     padding: 30px;
   }
+
+  /* Trick cards further from center on tablet */
+  .table-trick-card.pos-bottom { bottom: 30%; }
+  .table-trick-card.pos-top { top: 25%; }
+  .table-trick-card.pos-left { left: 28%; }
+  .table-trick-card.pos-right { right: 28%; }
+
+  .table-player-info.pos-bottom { bottom: 4px; }
+  .table-player-info.pos-top { top: 4px; }
+  .table-player-info.pos-left { left: 4px; }
+  .table-player-info.pos-right { right: 4px; }
+
+  .table-player-badge {
+    padding: 4px 8px;
+  }
 }
 
 /* ============================================================
@@ -1111,7 +1181,6 @@ input, select, textarea {
   :root {
     --page-pad: 16px;
     --panel-pad: 30px;
-    --table-height: 400px;
     --card-w: 70px;
     --card-h: 100px;
     --card-w-sm: 50px;
@@ -1123,7 +1192,7 @@ input, select, textarea {
     --card-rank: 18px;
     --card-rank-sm: 14px;
     --card-radius: 8px;
-    --card-gap: 4px;
+    --card-overlap: -2px;
     --fs-xs: 11px;
     --fs-sm: 13px;
     --fs-md: 16px;
@@ -1132,20 +1201,14 @@ input, select, textarea {
     --score-width: 260px;
   }
 
-  /* Unlock body scroll on desktop */
-  html, body {
-    overflow: auto;
-    position: static;
-  }
-
   .game-container {
-    padding: 16px;
-    gap: 10px;
+    padding: 12px;
+    gap: 8px;
   }
 
   .game-main {
     flex-direction: row;
-    gap: 16px;
+    gap: 12px;
   }
 
   .game-table-wrapper {
@@ -1172,8 +1235,14 @@ input, select, textarea {
     display: none;
   }
 
+  .game-score-backdrop,
+  .game-score-backdrop.visible {
+    display: none;
+  }
+
   .game-top-bar {
-    padding: 8px 16px;
+    padding: 6px 16px;
+    min-height: 32px;
   }
 
   .table-player-info.pos-bottom { bottom: 10px; }
@@ -1182,9 +1251,9 @@ input, select, textarea {
   .table-player-info.pos-right { right: 10px; }
 
   .table-trick-card.pos-bottom { bottom: 35%; }
-  .table-trick-card.pos-top { top: 35%; }
-  .table-trick-card.pos-left { left: 35%; }
-  .table-trick-card.pos-right { right: 35%; }
+  .table-trick-card.pos-top { top: 30%; }
+  .table-trick-card.pos-left { left: 32%; }
+  .table-trick-card.pos-right { right: 32%; }
 
   .table-player-badge {
     padding: 6px 12px;
@@ -1201,9 +1270,15 @@ input, select, textarea {
   }
 
   .player-hand {
-    padding: 10px 20px;
+    padding: 8px 20px;
     flex-wrap: wrap;
     overflow-x: visible;
+    gap: 4px;
+  }
+
+  /* No overlap on desktop — enough room */
+  .player-hand .card {
+    margin-left: 0;
   }
 
   .round-modal {
@@ -1216,12 +1291,43 @@ input, select, textarea {
    ============================================================ */
 @media (min-width: 1440px) {
   :root {
-    --table-height: 450px;
     --card-w: 80px;
     --card-h: 120px;
     --card-w-sm: 55px;
     --card-h-sm: 82px;
     --card-suit: 30px;
     --card-rank: 20px;
+  }
+}
+
+/* ============================================================
+   LANDSCAPE MOBILE — optimize for short viewports
+   ============================================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --card-w: clamp(35px, 7vh, 55px);
+    --card-h: clamp(50px, 10vh, 80px);
+    --card-w-sm: clamp(25px, 5vh, 40px);
+    --card-h-sm: clamp(35px, 7vh, 55px);
+    --card-suit: clamp(10px, 2.5vh, 20px);
+    --card-rank: clamp(8px, 2vh, 14px);
+    --card-suit-sm: clamp(8px, 2vh, 14px);
+    --card-rank-sm: clamp(7px, 1.5vh, 12px);
+    --fs-xs: 9px;
+    --fs-sm: 10px;
+    --card-overlap: -18px;
+  }
+
+  .game-top-bar {
+    min-height: 20px;
+    padding: 1px 8px;
+  }
+
+  .game-pass-bar {
+    padding: 2px 8px;
+  }
+
+  .table-player-badge {
+    padding: 1px 4px;
   }
 }

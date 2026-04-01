@@ -186,6 +186,12 @@ const GameScreen: React.FC<GameScreenProps> = ({
           </div>
         </div>
 
+        {/* Score panel backdrop — tap to dismiss on mobile */}
+        <div
+          className={`game-score-backdrop ${showScorePanel ? 'visible' : ''}`}
+          onClick={() => setShowScorePanel(false)}
+        />
+
         {/* Score panel */}
         <div className={`game-score-panel ${showScorePanel ? 'visible' : ''}`}>
           <button className="score-close" onClick={() => setShowScorePanel(false)}>
