@@ -150,8 +150,8 @@ const GameTable: React.FC<GameTableProps> = ({
 
       <style>{`
         @keyframes fadeSlideIn {
-          from { opacity: 0; transform: scale(0.5) translateY(20px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
     </div>

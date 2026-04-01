@@ -1,6 +1,6 @@
 import {
   Card, Suit, Rank, BotDifficulty, RuleVariants, GameState, TrickCard,
-} from './types';
+} from '../types/game';
 import { CardCounter } from './CardCounter';
 import * as BotWeights from './BotWeights';
 
@@ -117,14 +117,15 @@ function getLegalMoves(hand: Card[], gameState: GameState): Card[] {
 
   if (trick.length === 0) {
     // Leading a trick
-    if (rules.noHeartBreak && !gameState.heartsBroken) {
+    if (rules.noHeartBreak) {
+      // noHeartBreak = true means hearts can be led anytime (no restriction)
+      return hand;
+    }
+
+    if (!gameState.heartsBroken) {
+      // Can't lead hearts unless hearts are broken or only hearts in hand
       const nonHearts = hand.filter(c => !isHeart(c));
-      if (nonHearts.length > 0) return nonHearts;
-      // If only hearts remain, can lead them
-      if (rules.queenBreaksHearts) {
-        // QoS can also break hearts in this variant
-        return hand;
-      }
+      return nonHearts.length > 0 ? nonHearts : hand;
     }
     return hand;
   }
@@ -136,8 +137,9 @@ function getLegalMoves(hand: Card[], gameState: GameState): Card[] {
 
   // Void in lead suit: can play anything except...
   if (trickNum === 1) {
-    // First trick: no hearts or QoS (standard rule)
-    const safe = hand.filter(c => !isHeart(c) && !isQoS(c));
+    // First trick: no point cards (hearts, QoS, and blackMaria K♠/A♠ if enabled)
+    const safe = hand.filter(c => !isHeart(c) && !isQoS(c) &&
+      !(rules.blackMaria && c.suit === 'spades' && (c.rank === 'K' || c.rank === 'A')));
     if (safe.length > 0) return safe;
   }
 

@@ -14,7 +14,7 @@ const RULE_LABELS: { key: keyof RuleVariants; label: string; description: string
   { key: 'queenBreaksHearts', label: 'Queen Breaks Hearts', description: 'Q\u2660 counts as breaking hearts' },
   { key: 'moonGivesNegative', label: 'Shooting Moon -26', description: 'Shooter gets -26 instead of others +26' },
   { key: 'shootTheSun', label: 'Shoot the Sun', description: 'Win all 13 tricks = double moon bonus' },
-  { key: 'bloodOnTheMoon', label: 'Blood on the Moon', description: 'Doubles reward for shooting the moon' },
+  { key: 'bloodOnTheMoon', label: 'Blood on the Moon', description: '+5 penalty if no hearts taken in round' },
   { key: 'blackMaria', label: 'Black Maria', description: 'Q\u2660(+13) K\u2660(+10) A\u2660(+7) penalized' },
   { key: 'omnibusHearts', label: 'Omnibus Hearts', description: 'Enables J\u2666 bonus + all extras' },
 ];

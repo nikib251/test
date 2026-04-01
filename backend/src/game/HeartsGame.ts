@@ -431,7 +431,10 @@ export class HeartsGame {
       await this.delay(BOT_DELAY_MS);
       const gameState = this.getGameState();
       const card = await bot.chooseCard(gameState, currentPlayer.id);
-      this.playCard(currentPlayer.id, card.id);
+      const success = this.playCard(currentPlayer.id, card.id);
+      if (!success) {
+        throw new Error(`Bot chose invalid card: ${card.id}`);
+      }
     } catch (err) {
       console.error(`Bot ${currentPlayer.nickname} play error:`, err);
       // Fallback: play first valid card

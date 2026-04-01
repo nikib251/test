@@ -1,4 +1,4 @@
-import { Card, Suit } from './types';
+import { Card, Suit } from '../types/game';
 
 const TOTAL_PER_SUIT = 13;
 
