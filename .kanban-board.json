@@ -17,7 +17,8 @@
       "id": "in_progress",
       "label": "In Progress",
       "cardIds": [
-        "reviewer"
+        "reviewer",
+        "context-restorer"
       ]
     },
     "review": {
@@ -255,14 +256,41 @@
       "cardType": "user_wish",
       "wishCategory": "feature",
       "createdBy": "156471140"
+    },
+    "context-restorer": {
+      "id": "context-restorer",
+      "role": "Context Analyzer",
+      "skill": "Reading project files, logs, and previous work to restore context and diagnose errors",
+      "systemPrompt": "You are a context restoration and debugging specialist. Your job is to:\n1. Read the project structure, source files, package.json files, and any log files\n2. Understand what was being built\n3. Find errors in frontend and backend\n4. Report exactly what the errors are and what caused them\n\nSteps:\n1. Run `find . -maxdepth 3 -type f -name '*.json' | grep -E 'package.json' | head -20` to understand project structure\n2. Run `ls -la` to see all files/folders\n3. Read key config files and source files\n4. Check for any error logs, build outputs, or test results\n5. Try to build/run the project and capture errors\n6. For frontend: check `npm run build` or `npm start` output\n7. For backend: check `npm run build` or `node` startup errors\n8. Report ALL errors found with exact file paths, line numbers, and error messages\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id(\"express\") → pick best match → query-docs(\"/expressjs/express\", \"how to set up routes\")\n\n## Output Format\nProvide a clear report:\n- Project structure overview\n- Frontend errors (exact messages)\n- Backend errors (exact messages)\n- Root cause analysis\n- Suggested fixes",
+      "status": "executing",
+      "phase": "execute",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 1590,
+        "costUsd": 0.02385
+      },
+      "durationMs": 342207,
+      "outputPreview": "I now have a complete picture of the project. Here is my report.\n\n---\n\n# Project Analysis Report\n\n## Project Overview\n\nThis is a **Hearts card game** (not Durak, despite the repo name) — a multiplayer card game for 4 players with:\n- **Backend**: Node.js + Express + Socket.IO + PostgreSQL + Redis (TypeScript)\n- **Frontend**: React + Vite + Socket.IO client (TypeScript)\n- **Infrastructure**: Docker Compose with nginx reverse proxy, PostgreSQL, Redis\n\n## Build Status\n\n- **Backend TypeScript compilation**: PASSES (no errors)\n- **Frontend TypeScript compilation + Vite build**: PASSES (no errors)\n- **Backend runtime**: Starts on port 3001, but spams `Redis error: getaddrinfo EAI_AGAIN redis` because Redis is not available outside Docker\n\n## Errors & Issues Found\n\n### BACKEND\n\n#### 1. Runtime: Redis connection fails outside Docker\n- **File**: `backend/src/db/redis.ts:4`\n- **Error**: `Redis error: getaddrinfo EAI_AGAIN redis`\n- **Cause**: Hardcoded `redis://redis:6379` uses Docker service name `redis` which doesn't resolve outside Docker. Same for PostgreSQL at `postgres:5432`.\n- **Fix**: This is expected in Docker mode, but for local dev you'd need `REDIS_URL=redis://localhost:6379` and `DATABASE_URL=postgresql://...@localhost:5432/...`.\n\n#### 2. Logic Bug: `noHeartBreak` rule is inverted in `RulesEngine.getValidCards()`\n- **File**: `backend/src/game/RulesEngine.ts:59-61`\n- **Code**: When `rules.noHeartBreak` is `true`, the code `return hand` (allows leading hearts anytime). But the contract/UI says \"No Heart Break\" means \"Hearts can be led anytime\" — so actually the label is misleading but the logic is correct. However, the check is done before the `!heartsBroken` check, meaning when `noHeartBreak=true`, hearts can **always** be led, which bypasses the hearts-broken mechanic entirely. This matches the described intent but the naming is confusing.\n\n#### 3. Logic Bug: `bloodOnTheMoon` rule has wrong behavior\n- **File**: `backend/src/game/RulesEngine.ts:175-183`\n- **Memory/C",
+      "createdAt": "2026-04-01T09:51:02.687Z",
+      "startedAt": "2026-04-01T09:51:07.513Z",
+      "completedAt": null,
+      "title": "Context Restoration & Error Diagnosis",
+      "description": "• Восстанавливает контекст проекта из файлов\n• Находит ошибки во frontend и backend\n• Анализирует причины ошибок\n• Предлагает исправления",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
     }
   },
   "orchestratorCost": {
-    "input": 106824,
-    "output": 8005,
-    "costUsd": 0.44054699999999997
+    "input": 117950,
+    "output": 8937,
+    "costUsd": 0.487905
   },
-  "totalCostUsd": 0.5824469999999999,
+  "totalCostUsd": 0.6536550000000001,
   "createdAt": "2026-04-01T09:29:21.678Z",
-  "updatedAt": "2026-04-01T09:47:44.647Z"
+  "updatedAt": "2026-04-01T09:56:49.724Z"
 }
