@@ -1,4 +1,4 @@
-import { Card, Suit } from './types';
+import { Card, Suit } from '../types/game';
 export declare class CardCounter {
     private played;
     recordPlay(card: Card): void;

@@ -1,8 +1,8 @@
 {
-  "id": "3f1fa131-af86-4111-8835-9b591230a649",
+  "id": "267ff68d-c7f8-488b-abd3-a94c03e1bacc",
   "userId": 156471140,
   "projectName": "testdurak",
-  "task": "ну постепенно",
+  "task": "погнали",
   "status": "done",
   "phase": "plan",
   "pendingQuestions": [],
@@ -17,9 +17,9 @@
     "realtime": 0,
     "batch": 0
   },
-  "createdAt": "2026-04-01T10:12:19.909Z",
-  "updatedAt": "2026-04-01T10:12:23.927Z",
-  "startedAt": "2026-04-01T10:12:19.909Z",
-  "completedAt": "2026-04-01T10:12:23.927Z",
+  "createdAt": "2026-04-01T10:12:30.429Z",
+  "updatedAt": "2026-04-01T10:17:53.903Z",
+  "startedAt": "2026-04-01T10:12:30.429Z",
+  "completedAt": "2026-04-01T10:17:53.903Z",
   "errorLog": []
 }

@@ -1,4 +1,4 @@
-import { Card, BotDifficulty, RuleVariants, GameState } from './types';
+import { Card, BotDifficulty, RuleVariants, GameState } from '../types/game';
 export declare class HeartsBot {
     readonly nickname: string;
     readonly difficulty: BotDifficulty;

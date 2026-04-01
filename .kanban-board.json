@@ -34,7 +34,8 @@
         "db-architect",
         "bot-dev",
         "frontend-dev",
-        "backend-dev"
+        "backend-dev",
+        "integration-reviewer"
       ]
     }
   },
@@ -283,14 +284,41 @@
       "description": "• Восстанавливает контекст проекта из файлов\n• Находит ошибки во frontend и backend\n• Анализирует причины ошибок\n• Предлагает исправления",
       "cardType": "agent_task",
       "createdBy": "orchestrator"
+    },
+    "integration-reviewer": {
+      "id": "integration-reviewer",
+      "role": "Integration Reviewer",
+      "skill": "Full-stack TypeScript, Socket.IO, Hearts game logic auditing",
+      "systemPrompt": "You are a senior integration reviewer for a multiplayer Hearts card game. Your job is to deeply audit the codebase for bugs, type mismatches, missing event handlers, broken game logic, and integration issues between frontend and backend.\n\n## MCP Tools Available\nYou have access to MCP tools via Claude Code. ALWAYS use them when working with libraries/frameworks:\n- **context7**: Use resolve-library-id to find the library, then query-docs to fetch current documentation.\n  ALWAYS look up docs before writing code that uses any library, framework, or SDK — even well-known ones.\n  Your training data may be outdated. Context7 gives you the latest API signatures, examples, and best practices.\n  Example workflow: resolve-library-id(\"socket.io\") → pick best match → query-docs(\"/socketio/socket.io\", \"events\")\n\n## What to audit:\n1. **Socket.IO events** — every `emit` on frontend must have a matching `on` handler on backend and vice versa. List ALL mismatches.\n2. **TypeScript types** — shared types between frontend/backend. Any type mismatches, missing fields, wrong field names.\n3. **Game logic** — Hearts rules: noHeartBreak, bloodOnTheMoon, moon shooting, card passing. Look for logical bugs.\n4. **REST API** — all fetch() calls in frontend must match backend routes exactly (method, path, response shape).\n5. **Redis/PostgreSQL** — state management correctness, missing awaits, race conditions.\n6. **Lobby & chat** — what's wired, what's broken, what's missing.\n7. **Bot AI** — check if bot difficulty levels work correctly, any crashes or edge cases.\n\n## How to work:\n- Read ALL source files thoroughly: backend/src/, frontend/src/\n- Use grep/find to trace event names and API calls\n- For each bug found: describe the file, line, issue, and exact fix needed\n- Output a numbered list of ALL issues found, grouped by severity: CRITICAL, MAJOR, MINOR\n- After listing all issues, FIX all of them directly in the files\n- Run `cd backend && npm run build` and `cd frontend && npm run build` to verify fixes compile\n- Commit all fixes with: git add -A && git commit -m 'fix: integration review fixes'\n\n## Constraints:\n- Fix issues directly, don't just report them\n- Make minimal targeted changes — don't refactor working code\n- If a fix requires adding a new small function, do it\n- Do NOT change game rules or UI design",
+      "status": "done",
+      "phase": "execute",
+      "taskDepth": 0,
+      "parentCardId": null,
+      "userComments": [],
+      "attachments": [],
+      "pendingQuestion": null,
+      "tokenUsage": {
+        "input": 0,
+        "output": 329,
+        "costUsd": 0.004934999999999999
+      },
+      "durationMs": 262297,
+      "outputPreview": "All 7 issues have been fixed and committed. Here's a summary:\n\n### Issues Fixed (7 total)\n\n**CRITICAL (3):**\n1. **Bot `noHeartBreak` logic inverted** — Bot was blocking hearts when the rule says they're allowed, and vice versa. Now matches `RulesEngine.getValidCards` behavior.\n2. **Bot first-trick `blackMaria` gap** — Bot didn't filter K♠/A♠ on first trick when `blackMaria` enabled, could choose invalid cards.\n3. **`checkBotTurn` game freeze** — If bot chose an invalid card, `playCard` returned `false` silently and the game hung forever. Now throws to trigger the fallback path.\n\n**MAJOR (3):**\n4. **`bloodOnTheMoon` UI mismatch** — UI said \"doubles moon reward\" but actual behavior is \"+5 penalty if no hearts taken\". Fixed description.\n5. **Bot duplicated types** — Bot imported from local `./types` instead of shared `../types/game`. Now uses the single source of truth.\n6. **Reconnection data loss** — `rejoin_game` didn't update `roundScoresHistory`, `passedCards`, or `pendingPasses` for the new socket ID. Scoreboard would show wrong data after reconnect.\n\n**MINOR (1):**\n7. **Trick card animation glitch** — CSS `transform` in animation overrode positioning transforms, causing cards to appear off-center during animation.\n\nAll changes compile cleanly (backend `tsc` + frontend `tsc && vite build`).\n",
+      "createdAt": "2026-04-01T10:13:20.016Z",
+      "startedAt": "2026-04-01T10:13:25.583Z",
+      "completedAt": "2026-04-01T10:17:47.882Z",
+      "title": "Интеграционная проверка",
+      "description": "• Аудит всех Socket.IO событий (emit↔on совпадения)\n• Проверка TypeScript типов между frontend и backend\n• Баги в игровой логике (noHeartBreak, bloodOnTheMoon, moon)\n• REST API — соответствие fetch() вызовов и роутов\n• Redis/PostgreSQL — race conditions, missing awaits\n• Чат лобби — что сломано\n• Исправление всех найденных проблем + проверка компиляции",
+      "cardType": "agent_task",
+      "createdBy": "orchestrator"
     }
   },
   "orchestratorCost": {
-    "input": 117950,
-    "output": 8937,
-    "costUsd": 0.487905
+    "input": 123964,
+    "output": 9178,
+    "costUsd": 0.509562
   },
-  "totalCostUsd": 0.6536550000000001,
+  "totalCostUsd": 0.680247,
   "createdAt": "2026-04-01T09:29:21.678Z",
-  "updatedAt": "2026-04-01T09:56:49.724Z"
+  "updatedAt": "2026-04-01T10:17:47.882Z"
 }

@@ -83,6 +83,23 @@ function setupGameSocket(io) {
                 if (tc.playerId === oldId)
                     tc.playerId = socket.id;
             }
+            // Update round scores history
+            for (const roundScore of game.roundScoresHistory) {
+                if (roundScore[oldId] !== undefined) {
+                    roundScore[socket.id] = roundScore[oldId];
+                    delete roundScore[oldId];
+                }
+            }
+            // Update passed cards
+            if (game.passedCards[oldId] !== undefined) {
+                game.passedCards[socket.id] = game.passedCards[oldId];
+                delete game.passedCards[oldId];
+            }
+            // Update pending passes
+            if (game.pendingPasses.has(oldId)) {
+                game.pendingPasses.set(socket.id, game.pendingPasses.get(oldId));
+                game.pendingPasses.delete(oldId);
+            }
             socket.join(data.gameId);
             playerSessions.set(socket.id, { gameId: data.gameId, playerId: socket.id, nickname: data.nickname });
             if (ack)
